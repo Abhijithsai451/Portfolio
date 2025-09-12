@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematician & Data Scientist Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader">
+            <div class="math-symbol">∑</div>
+            <div class="loading-text">Initializing Portfolio</div>
+        </div>
+    </div>
+
+    <!-- Animated Math Background -->
+    <canvas id="math-canvas"></canvas>
+
+    <!-- Header & Navigation -->
+    <header id="header">
+        <div class="container nav-container">
+            <a href="#" class="logo">Abhijith <span>Sai</span></a>
+            <ul class="nav-links">
+                <div class="close-btn">
+                    <i class="fas fa-times"></i>
+                </div>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                    <div class="theme-toggle-ball"></div>
+                </div>
+                <div class="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Transforming Data into <span>Insights</span></h1>
+                <p class="hero-subtitle">Mathematician & Data Scientist</p>
+                <p class="hero-desc">I use advanced mathematical models and machine learning to solve complex problems and extract meaningful patterns from data.</p>
+                <div class="hero-btns">
+                    <a href="#projects" class="btn">View Projects</a>
+                    <a href="#research" class="btn btn-secondary">Research Papers</a>
+                    <a href="#" class="btn btn-secondary" id="download-resume">Download CV</a>
+                </div>
+            </div>
+            <div class="hero-visualization">
+                <div class="graph-container">
+                    <div class="graph">Interactive Data Visualization</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Bridging Mathematics and Data Science</h3>
+                    <p>I specialize in applying advanced mathematical concepts to solve real-world data problems. With expertise in statistical modeling, machine learning, and algorithmic design, I transform complex data into actionable insights.</p>
+                    
+                    <div class="specializations">
+                        <div class="specialization">
+                            <div class="spec-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="spec-content">
+                                <h4>Mathematical Modeling</h4>
+                                <p>Developing sophisticated models to represent complex systems and phenomena</p>
+                            </div>
+                        </div>
+                        <div class="specialization">
+                            <div class="spec-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="spec-content">
+                                <h4>Data Analysis</h4>
+                                <p>Extracting meaningful patterns and insights from large, complex datasets</p>
+                            </div>
+                        </div>
+                        <div class="specialization">
+                            <div class="spec-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="spec-content">
+                                <h4>Machine Learning</h4>
+                                <p>Building predictive models and AI systems using advanced algorithms</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-stats">
+                    <div class="stat">
+                        <div class="stat-value" data-count="42">0</div>
+                        <div class="stat-label">Projects Completed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" data-count="17">0</div>
+                        <div class="stat-label">Research Papers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" data-count="9">0</div>
+                        <div class="stat-label">Algorithms Developed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" data-count="96">0</div>
+                        <div class="stat-label">Models Trained</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="skills-section">
+                <h3>Technical Expertise</h3>
+                <div class="skills-container">
+                    <div class="skill">
+                        <div class="skill-info">
+                            <span>Python & R</span>
+                            <span>98%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-width="98%"></div>
+                        </div>
+                    </div>
+                    <div class="skill">
+                        <div class="skill-info">
+                            <span>Machine Learning</span>
+                            <span>95%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-width="95%"></div>
+                        </div>
+                    </div>
+                    <div class="skill">
+                        <div class="skill-info">
+                            <span>Statistical Analysis</span>
+                            <span>97%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-width="97%"></div>
+                        </div>
+                    </div>
+                    <div class="skill">
+                        <div class="skill-info">
+                            <span>Data Visualization</span>
+                            <span>93%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-width="93%"></div>
+                        </div>
+                    </div>
+                    <div class="skill">
+                        <div class="skill-info">
+                            <span>Big Data Technologies</span>
+                            <span>88%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-width="88%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="section-title">Data Projects</h2>
+            
+            <div class="projects-filter">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="ml">Machine Learning</button>
+                <button class="filter-btn" data-filter="stats">Statistical Analysis</button>
+                <button class="filter-btn" data-filter="optimization">Optimization</button>
+            </div>
+            
+            <div class="projects-grid">
+                <div class="project-card visible" data-category="ml">
+                    <div class="project-img">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Predictive Customer Analytics</h3>
+                        <p class="project-desc">Developed a machine learning model to predict customer churn with 94% accuracy using ensemble methods.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Python</span>
+                            <span class="project-tag">Scikit-Learn</span>
+                            <span class="project-tag">XGBoost</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+                
+                <div class="project-card visible" data-category="stats">
+                    <div class="project-img">
+                        <i class="fas fa-chart-bar fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Bayesian Analysis of Clinical Trials</h3>
+                        <p class="project-desc">Implemented Bayesian statistical models to analyze clinical trial data and estimate treatment effects.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">R</span>
+                            <span class="project-tag">Stan</span>
+                            <span class="project-tag">Bayesian Methods</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+                
+                <div class="project-card visible" data-category="optimization">
+                    <div class="project-img">
+                        <i class="fas fa-cogs fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Supply Chain Optimization</h3>
+                        <p class="project-desc">Designed optimization algorithms to minimize logistics costs while meeting service level requirements.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Python</span>
+                            <span class="project-tag">Linear Programming</span>
+                            <span class="project-tag">Gurobi</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+                
+                <div class="project-card visible" data-category="ml">
+                    <div class="project-img">
+                        <i class="fas fa-language fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">NLP for Sentiment Analysis</h3>
+                        <p class="project-desc">Built a transformer-based model for sentiment analysis of financial news with real-time processing capabilities.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">TensorFlow</span>
+                            <span class="project-tag">BERT</span>
+                            <span class="project-tag">NLP</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+                
+                <div class="project-card visible" data-category="stats">
+                    <div class="project-img">
+                        <i class="fas fa-clock fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Time Series Forecasting</h3>
+                        <p class="project-desc">Developed ARIMA and LSTM models for accurate forecasting of economic indicators.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Python</span>
+                            <span class="project-tag">ARIMA</span>
+                            <span class="project-tag">LSTM</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+                
+                <div class="project-card visible" data-category="optimization">
+                    <div class="project-img">
+                        <i class="fas fa-chart-pie fa-3x"></i>
+                        <div class="project-hover">
+                            <a href="#" class="btn">View Case Study</a>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Portfolio Optimization</h3>
+                        <p class="project-desc">Applied Modern Portfolio Theory and convex optimization to maximize returns while minimizing risk.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Matlab</span>
+                            <span class="project-tag">CVX</span>
+                            <span class="project-tag">Financial Engineering</span>
+                        </div>
+                        <a href="#" class="btn">Project Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Section -->
+    <section id="research" class="research">
+        <div class="container">
+            <h2 class="section-title">Research & Publications</h2>
+            
+            <div class="research-tabs">
+                <button class="research-tab active" data-tab="papers">Papers</button>
+                <button class="research-tab" data-tab="conferences">Conferences</button>
+                <button class="research-tab" data-tab="algorithms">Algorithms</button>
+            </div>
+            
+            <div class="research-content">
+                <div class="research-item" data-category="papers">
+                    <div class="research-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="research-details">
+                        <h3>Stochastic Optimization for High-Dimensional Data</h3>
+                        <p class="research-journal">Journal of Machine Learning Research, 2023</p>
+                        <p class="research-desc">Novel approach to stochastic optimization that improves convergence rates in high-dimensional spaces by leveraging sparse regularization techniques.</p>
+                        <a href="#" class="research-link">Read Paper <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                
+                <div class="research-item" data-category="papers">
+                    <div class="research-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="research-details">
+                        <h3>Topological Data Analysis for Financial Networks</h3>
+                        <p class="research-journal">SIAM Journal on Financial Mathematics, 2022</p>
+                        <p class="research-desc">Application of persistent homology to identify structural patterns in financial networks and predict systemic risk.</p>
+                        <a href="#" class="research-link">Read Paper <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                
+                <div class="research-item" data-category="conferences">
+                    <div class="research-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <div class="research-details">
+                        <h3>Graph Neural Networks for Recommendation Systems</h3>
+                        <p class="research-journal">NeurIPS 2022 Conference</p>
+                        <p class="research-desc">Presented a novel graph neural network architecture that significantly improves recommendation accuracy by capturing higher-order interactions.</p>
+                        <a href="#" class="research-link">View Presentation <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                
+                <div class="research-item" data-category="algorithms">
+                    <div class="research-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="research-details">
+                        <h3>Fast Approximate Matrix Factorization</h3>
+                        <p class="research-journal">Open Source Algorithm</p>
+                        <p class="research-desc">Developed a computationally efficient algorithm for large-scale matrix factorization that achieves near-optimal results with reduced time complexity.</p>
+                        <a href="#" class="research-link">View Code <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h3>Let's Collaborate on Data Solutions</h3>
+                    <p>I'm always interested in discussing new projects, research opportunities, and data challenges.</p>
+                    
+                    <div class="contact-detail">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h4>Email</h4>
+                            <p>researcher@datascience.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-detail">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="contact-detail">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h4>Location</h4>
+                            <p>Boston, MA</p>
+                        </div>
+                    </div>
+                    
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-google-scholar"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="contact-form">
+                        <input type="text" placeholder="Your Name" required>
+                        <input type="email" placeholder="Your Email" required>
+                        <input type="text" placeholder="Subject" required>
+                        <textarea placeholder="Your Message" required></textarea>
+                        <button type="submit" class="btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <a href="#" class="logo">Data<span>Sci</span></a>
+                    <p>Mathematician & Data Scientist</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="#research">Research</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">CV</a></li>
+                        <li><a href="#">Publications</a></li>
+                        <li><a href="#">Code Repository</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Stay Updated</h4>
+                    <p>Subscribe to my newsletter for updates on research and projects</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your Email">
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>© 2023 Data Scientist Portfolio. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" id="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        Message sent successfully!
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
