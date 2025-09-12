@@ -290,3 +290,164 @@ window.addEventListener('load', function() {
     
     animatedElements.forEach(el => observer.observe(el));
 });
+
+// ============================================================================
+// AI CHAT SECTION FUNCTIONALITY
+// ============================================================================
+
+// Chat Section Elements
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send-btn');
+const sampleQuestionBtns = document.querySelectorAll('.sample-question-btn');
+
+// Add Message to Chat
+function addMessage(text, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.textContent = text;
+    
+    messageDiv.appendChild(messageContent);
+    chatMessages.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Show Typing Indicator
+function showTypingIndicator() {
+    // Remove existing typing indicator if any
+    const existingIndicator = document.querySelector('.typing-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator active';
+    indicator.textContent = 'Thinking...';
+    chatMessages.appendChild(indicator);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return indicator;
+}
+
+// Hide Typing Indicator
+function hideTypingIndicator(indicator) {
+    if (indicator && indicator.parentNode) {
+        indicator.remove();
+    }
+}
+
+// Handle Sample Question Click
+function handleSampleQuestion(question) {
+    // Add user message
+    addMessage(question, true);
+    
+    // Show typing indicator
+    const typingIndicator = showTypingIndicator();
+    
+    // For now, simulate AI response after delay
+    setTimeout(() => {
+        hideTypingIndicator(typingIndicator);
+        
+        // Simulated response - will be replaced with real AI response
+        const responses = [
+            "I'd be happy to tell you about that! This feature is currently being set up. Soon I'll be able to answer all your questions about Abhijith's background and projects.",
+            "That's a great question! The AI assistant is almost ready to provide detailed answers about skills, experience, and projects.",
+            "I'm currently learning all about Abhijith's portfolio. Check back soon for detailed answers to your questions!"
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        addMessage(randomResponse);
+    }, 1500);
+}
+
+// Handle sending messages
+function handleSendMessage(message) {
+    // Add user message
+    addMessage(message, true);
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // Show typing indicator
+    const typingIndicator = showTypingIndicator();
+    
+    // For now, simulate AI response
+    setTimeout(() => {
+        hideTypingIndicator(typingIndicator);
+        
+        // Simulated response
+        addMessage("I'm still learning how to answer questions. For now, please use the sample questions above, or check back soon when I'm fully trained!");
+    }, 2000);
+}
+
+// Initialize Chat Event Listeners
+function initChatSection() {
+    // Sample question buttons
+    sampleQuestionBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const question = btn.textContent;
+            handleSampleQuestion(question);
+        });
+    });
+    
+    // Send message on button click
+    if (chatSendBtn) {
+        chatSendBtn.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                handleSendMessage(message);
+            }
+        });
+    }
+    
+    // Send message on Enter key
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const message = chatInput.value.trim();
+                if (message) {
+                    handleSendMessage(message);
+                }
+            }
+        });
+    }
+}
+
+// Initialize chat section when page loads
+window.addEventListener('load', function() {
+    // ... your existing load event code ...
+    
+    initMathBackground();
+    initGraphs();
+    initCounter();
+    
+    // Initialize chat section
+    initChatSection();
+    
+    // Animate skill bars
+    const skillBars = document.querySelectorAll('.skill-progress');
+    skillBars.forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        bar.style.width = width;
+    });
+    
+    // Animate elements on scroll
+    const animatedElements = document.querySelectorAll('.project-card, .research-item, .stat');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    animatedElements.forEach(el => observer.observe(el));
+});

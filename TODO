@@ -1,0 +1,79 @@
+Task 1: Technology Stack Selection & Setup
+
+Objective: Finalize and set up the core technologies.
+Details: Choose specific libraries and services.
+Frontend (Widget): Vanilla JS or a lightweight library like lit-html for the chat UI components.
+Backend (API): Set up a simple Node.js/Express or Python (FastAPI) server to handle requests securely. This is crucial to avoid exposing API keys.
+LLM Provider: Decide on an API (e.g., Groq for blazing-fast Llama inference, OpenAI, or a local Ollama setup if you want it fully self-contained).
+Vector Database & Embeddings: Choose a simple vector DB lib (e.g., chromadb for Python or hnswlib-node for JS) and an embeddings API (e.g., OpenAI's text-embedding-3-small, Cohere, or an open-source model).
+
+
+
+Task 2: Data Preparation ("Knowledge Base")
+
+Objective: Structure all your information into a format the AI can use.
+Details: Create a comprehensive text file (e.g., knowledge_base.txt) that includes all content from your resume (skills, experience, education) and detailed descriptions of your projects (like the ones on your portfolio page). This file will be chunked and stored in the vector DB.
+
+
+
+Task 3: Building the Knowledge Base (Vector DB)
+Objective: Create a script to process your data and populate the vector database.
+Details: Write a backend script that:
+Reads the knowledge_base.txt file.
+Splits the text into smaller chunks (e.g., by sentence or paragraph).
+Converts each chunk into a numerical vector (embedding) using the chosen embeddings API.
+Stores these vectors and their corresponding text chunks in the vector database.
+
+
+
+Task 4: Design & Implement the Chat Widget UI
+
+Objective: Create the visual component that will live on your portfolio.
+Details: Using HTML and CSS, code a small button/floating icon (e.g., bottom right corner) that expands into a chat window. The design must match your portfolio's existing theme (using your CSS variables like --primary, --card-bg, etc.). It should include a message area, an input field, and a send button.
+
+Task 5: Implement Widget Frontend Logic
+
+Objective: Make the UI interactive and handle communication with your backend.
+Details: Write JavaScript to:
+Handle the open/close toggle of the chat widget.
+Capture user input from the chat form.
+Display user and AI messages in the chat history.
+Send the user's question to your backend API and handle the streaming response.
+
+
+
+Task 6: Build the Backend API Endpoint
+
+Objective: Create a secure server endpoint that processes queries.
+Details: Set up a POST endpoint (e.g., /api/chat) on your backend server. This endpoint will receive the user's question and orchestrate the following steps.
+
+
+
+Task 7: Implement the RAG Logic on the Backend
+
+Objective: For each question, find the most relevant information about you from the vector DB and feed it to the LLM.Details: Inside the /api/chat endpoint logic:
+Take the user's question and convert it into an embedding vector.
+Query the vector database to find the text chunks most semantically similar (relevant) to the question.
+Combine these relevant chunks with the original question into a carefully crafted prompt for the LLM (e.g., "Based on the following information: [chunks here], answer this question: [user question here]").
+
+
+
+Task 8: Integrate with the LLM API
+
+Objective: Send the augmented prompt to the LLM and get the answer.
+Details: From your backend, call the chosen LLM API (Groq, OpenAI, etc.) with the constructed prompt. Stream the response back to the frontend widget to simulate real-time typing.
+
+
+
+Task 9: Implement Sample Questions Feature
+
+Objective: Guide the recruiter by suggesting questions.
+Details: When the chat widget is opened, automatically add 3-4 messages from "AI" suggesting questions like: "What are [Your Name]'s strongest technical skills?", "Tell me about the [Project Name] project.", "What is [Your Name]'s professional experience?".
+
+
+
+Task 10: Testing, Polishing & Deployment
+
+Objective: Ensure everything works perfectly and deploy it.
+Details: Thoroughly test the entire flow with various questions. Polish the UI/UX (e.g., adding a typing indicator). Ensure the backend is secure (e.g., rate limiting). Deploy the backend server (e.g., on Railway, Render, or Fly.io) and update the frontend API calls to point to the live server URL.
+

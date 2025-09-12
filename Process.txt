@@ -1,0 +1,46 @@
+End-to-End Process & Deployment
+Here is the complete flow of how the system will work, from a user asking a question to getting an answer, and how it's deployed.
+
+How it Works (The RAG Process):
+
+User Asks: A recruiter types "What machine learning projects has Abhijith done?" into your chat widget.
+
+Frontend Sends: Your vanilla JS code sends this question to your Node.js/Express backend API.
+
+Backend Gets Embedding: The backend sends the question to the locally running Ollama nomic-embed-text model to convert it into a numerical vector.
+
+Backend Searches: This question vector is used to query the pre-built hnswlib-node vector index. The index finds the most relevant text chunks from your resume/knowledge base (e.g., the descriptions of your ML projects).
+
+Backend Builds Prompt: The backend constructs a prompt for the LLM: "Using only the following information: [Relevant project descriptions here...]. Answer the user's question: 'What machine learning projects has Abhijith done?'"
+
+Backend Gets Answer: This prompt is sent to the locally running Ollama llama3.1 model.
+
+LLM Responds: The LLM generates an answer based strictly on the provided context. It streams the answer back to the backend.
+
+Backend Streams Answer: The backend relays this stream of text back to the frontend.
+
+Frontend Displays: The chat widget displays the answer to the recruiter in real-time.
+
+How to Deploy It:
+
+This is the crucial part. Since we are running models locally with Ollama, we need to deploy our application as a Docker container. This ensures the environment (Node.js, Ollama, the models) is consistent between your machine and the hosting platform.
+
+Create a Dockerfile: You will write a script that tells the hosting platform how to build your application. It will:
+
+Use a base Linux image.
+
+Install Node.js and Ollama.
+
+Copy your backend code.
+
+Run commands to pull the llama3.1 and nomic-embed-text models.
+
+Start your Node.js server.
+
+Choose a Host: You need a hosting provider that supports Docker containers and provides adequate CPU/RAM to run these models. Railway is an excellent choice for this as it has a straightforward Docker deployment process and a generous free tier that can handle smaller models. Other options include Fly.io or Koyeb.
+
+Connect & Deploy: You will connect your GitHub repository (containing your backend code and the Dockerfile) to Railway. Every time you push code, Railway will automatically build the Docker image and deploy it.
+
+Update Frontend: The final step is to update the API URL in your portfolio's frontend JavaScript code to point to the live backend URL provided by Railway.
+
+This approach gives you a powerful, self-contained, and completely open-source AI agent that runs on your own terms
