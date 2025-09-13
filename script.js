@@ -508,3 +508,119 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+// API configuration - Update for production
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8000' 
+    : 'https://your-backend-production-url.railway.app';
+
+// Enhanced error handling for API calls
+async function makeApiRequest(endpoint, options = {}) {
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
+}
+
+// Enhanced sample question handler
+async function handleSampleQuestion(question, btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Asking...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+    
+    addMessage(question, true);
+    
+    const typingIndicator = showTypingIndicator();
+    
+    try {
+        const data = await makeApiRequest('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ message: question })
+        });
+        
+        hideTypingIndicator(typingIndicator);
+        addMessage(data.response);
+        
+    } catch (error) {
+        hideTypingIndicator(typingIndicator);
+        addMessage("I'm having trouble connecting to my knowledge base. Please try again later.");
+        console.error('Chat error:', error);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+        btn.disabled = false;
+    }
+}
+
+// Enhanced message sending
+async function handleSendMessage(message) {
+    if (!message.trim()) return;
+    
+    addMessage(message, true);
+    
+    chatInput.style.opacity = '0.5';
+    setTimeout(() => {
+        chatInput.value = '';
+        chatInput.style.opacity = '1';
+    }, 300);
+    
+    const typingIndicator = showTypingIndicator();
+    
+    try {
+        const data = await makeApiRequest('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ message: message })
+        });
+        
+        hideTypingIndicator(typingIndicator);
+        addMessage(data.response);
+        
+    } catch (error) {
+        hideTypingIndicator(typingIndicator);
+        addMessage("I'm having trouble connecting right now. Please try again.");
+        console.error('Send message error:', error);
+    }
+}
+
+// Add connection status indicator
+function updateConnectionStatus() {
+    const statusIndicator = document.getElementById('connection-status') || createConnectionStatus();
+    
+    fetch(`${API_BASE_URL}/api/health`)
+        .then(response => response.json())
+        .then(data => {
+            statusIndicator.className = 'connection-status connected';
+            statusIndicator.title = 'AI Agent: Connected';
+        })
+        .catch(error => {
+            statusIndicator.className = 'connection-status disconnected';
+            statusIndicator.title = 'AI Agent: Disconnected';
+        });
+}
+
+function createConnectionStatus() {
+    const status = document.createElement('div');
+    status.id = 'connection-status';
+    status.className = 'connection-status';
+    status.innerHTML = '🤖';
+    document.body.appendChild(status);
+    return status;
+}
+
+// Check connection every 30 seconds
+setInterval(updateConnectionStatus, 30000);
+updateConnectionStatus();
