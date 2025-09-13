@@ -35,6 +35,12 @@ else
     source venv/bin/activate
 fi
 
+# Create logs directory if it doesn't exist
+if [ ! -d "logs" ]; then
+    echo "📂 Creating 'logs' directory..."
+    mkdir -p logs
+fi
+
 # Check if using Docker
 if [ "$1" = "--docker" ]; then
     echo "🐳 Starting with Docker Compose..."

@@ -1,25 +1,26 @@
 from imports_file import *
+from slowapi import _rate_limit_exceeded_handler
 
 # Load environment variables
 load_dotenv()
 
-logger = logging_config.getLogger(__name__)
+logger = logging.getLogger(__name__)
 logger.info("Starting Portfolio AI Agent...")
 app = FastAPI(title="Portfolio AI Agent",
               description="AI powered chat agent for portfolio website with RAG Capabilities",
               version="1.0.0",
-              docs_url="api/docs",
-              redoc_url="api/redoc"
+              docs_url="/api/docs",
+              redoc_url="/api/redoc"
               )
 # Rate Limiting
-limiter = Limiter(key_func=get_remote_addres)
+limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,14 +28,14 @@ app.add_middleware(
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=os.getenv("ALLOWED_HOSTS", "*").split(","))
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# configuration
+# Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "llama3.1")
-KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_URL", "/knowledge_base.txt")
-USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "False").lower() == "true"
+KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_FILE", "knowledge_base.txt")
+USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "false").lower() == "true"
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
+CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # 5 minutes
 
 # Initializing Redis for caching
 try:
