@@ -20,4 +20,4 @@ jobs:
           
       - name: Install dependencies
         run: |
-          python -m pip install --up
+          python -m pip install --upgrade pip
