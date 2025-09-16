@@ -11,7 +11,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - USE_VECTOR_DB=true
     volumes:
-      - ./knowledge_base.txt:/app/knowledge_base.txt
+      - ./backend/knowledge_base.txt:/app/knowledge_base.txt
       - ./chroma_db:/app/chroma_db
     depends_on:
       - ollama
@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:latest
     ports:
       - "6379:6379"
     volumes:

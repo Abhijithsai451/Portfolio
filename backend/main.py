@@ -1,4 +1,6 @@
-from imports_file import *
+from fastapi.responses import PlainTextResponse
+
+from backend.imports_file import *
 from slowapi import _rate_limit_exceeded_handler
 
 # Load environment variables
@@ -6,6 +8,9 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.info("Starting Portfolio AI Agent...")
+
+# Initializing Monitor
+monitor = Monitor()
 app = FastAPI(title="Portfolio AI Agent",
               description="AI powered chat agent for portfolio website with RAG Capabilities",
               version="1.0.0",
@@ -68,14 +73,16 @@ try:
 except Exception as e:
     logger.warning(f"Failed to load local embedding model: {e}")
 
-# Prometheus metrics
+"""# Prometheus metrics
 REQUEST_COUNT = Counter('request_count', 'Total API requests', ['method', 'endpoint', 'status'])
 REQUEST_LATENCY = Histogram('request_latency_seconds', 'Request latency', ['endpoint'])
 CHAT_REQUEST_COUNT = Counter('chat_requests_total', 'Total chat requests', ['status'])
 EMBEDDING_REQUEST_COUNT = Counter('embedding_requests_total', 'Total embedding requests', ['source'])
+"""
+
 
 # Instrument the app
-Instrumentator().instrument(app).expose(app)
+# Instrumentator().instrument(app).expose(app, endpoint="/api/metrics")
 
 
 # Pydantic models
@@ -191,7 +198,8 @@ def set_cache(key: str, value: Any, ttl: int = CACHE_TTL):
 
 async def generate_embedding(text: str) -> List[float]:
     """Generate text embedding with fallback strategies"""
-    EMBEDDING_REQUEST_COUNT.labels(source='ollama').inc()
+    # EMBEDDING_REQUEST_COUNT.labels(source='ollama').inc()
+    monitor.increment_embedding_requests(source='ollama')
 
     # Try Ollama first
     try:
@@ -208,7 +216,7 @@ async def generate_embedding(text: str) -> List[float]:
         logger.warning(f"Ollama embedding failed: {e}")
 
     # Fallback to local model
-    EMBEDDING_REQUEST_COUNT.labels(source='local').inc()
+    monitor.increment_embedding_requests(source='local')
     if local_embedder:
         try:
             embedding = local_embedder.encode([text])[0].tolist()
@@ -309,7 +317,7 @@ async def health_check():
 
 @app.get("/api/metrics")
 async def metrics():
-    return generate_latest()
+    return PlainTextResponse(generate_latest(), media_type="text/plain; version=0.0.4; charset=utf-8")
 
 
 @app.get("/api/stats", response_model=StatsResponse)
@@ -327,44 +335,42 @@ async def get_stats():
 @limiter.limit("10/minute")
 async def chat_endpoint(request: Request, chat_request: ChatRequest):
     start_time = time.time()
-    CHAT_REQUEST_COUNT.labels(status='received').inc()
-
+    monitor.increment_chat_requests("received")
     try:
-        with REQUEST_LATENCY.labels(endpoint='/api/chat').time():
-            context = await find_relevant_context(chat_request.message)
+        context = await find_relevant_context(chat_request.message)
 
-            system_prompt = f"""You are an AI assistant for Abhijith Sai, a Mathematician and Data Scientist.
+        system_prompt = f"""You are an AI assistant for Abhijith Sai, a Mathematician and Data Scientist.
 
-            ABOUT ABHIJITH:
-            {context}
+        ABOUT ABHIJITH:
+        {context}
 
-            INSTRUCTIONS:
-            - Be professional, friendly, and concise
-            - Use ONLY the information provided
-            - Admit when you don't know something
-            - Keep responses under 3-4 sentences
-            - Focus on skills, projects, and experience
-            """
+        INSTRUCTIONS:
+        - Be professional, friendly, and concise
+        - Use ONLY the information provided
+        - Admit when you don't know something
+        - Keep responses under 3-4 sentences
+        - Focus on skills, projects, and experience
+        """
 
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": chat_request.message}
-            ]
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": chat_request.message}
+        ]
 
-            response = await chat_with_ollama(messages)
-            processing_time = time.time() - start_time
+        response = await chat_with_ollama(messages)
+        processing_time = time.time() - start_time
 
-            CHAT_REQUEST_COUNT.labels(status='success').inc()
-
-            return ChatResponse(
-                response=response,
-                session_id=chat_request.session_id,
-                processing_time=processing_time
-            )
+        monitor.increment_chat_requests(status="success")
+        monitor.set_response_time(time.time() - start_time)
+        return ChatResponse(
+            response=response,
+            session_id=chat_request.session_id,
+            processing_time=processing_time
+        )
 
     except Exception as e:
         processing_time = time.time() - start_time
-        CHAT_REQUEST_COUNT.labels(status='error').inc()
+        monitor.increment_chat_requests(status="error")
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

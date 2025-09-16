@@ -21,12 +21,13 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
-from prometheus_client import Counter, Histogram, generate_latest
+from prometheus_client import Counter, Gauge, REGISTRY
+from prometheus_client import Histogram, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-
-from configuration import logging_config
+from backend.configuration.dashboard_config import Monitor
+from backend.configuration import logging_config
