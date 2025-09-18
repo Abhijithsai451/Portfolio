@@ -10,9 +10,13 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - REDIS_URL=redis://redis:6379
       - USE_VECTOR_DB=true
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,portfolio-backend,172.18.0.2
+
     volumes:
       - ./backend/knowledge_base.txt:/app/knowledge_base.txt
       - ./chroma_db:/app/chroma_db
+      - sentence_transformer_cache:/root/.cache/torch/sentence_transformers
+
     depends_on:
       - ollama
       - redis
@@ -45,3 +49,4 @@ services:
 volumes:
   ollama_data:
   redis_data:
+  sentence_transformer_cache:

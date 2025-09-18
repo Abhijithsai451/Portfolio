@@ -62,5 +62,5 @@ else
     echo "📈 Metrics: http://localhost:8000/api/metrics"
     echo "❤️  Health: http://localhost:8000/api/health"
     echo ""
-    uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 --log-level info
+    uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 --log-level debug
 fi

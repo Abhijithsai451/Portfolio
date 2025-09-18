@@ -6,7 +6,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-
+import uvicorn
 import aiohttp
 import chromadb
 import numpy as np
