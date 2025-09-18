@@ -2,3 +2,4 @@
 /rough file
 /.env
 /backend/logs/app.log
+/venv/

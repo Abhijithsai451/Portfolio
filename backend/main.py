@@ -414,12 +414,10 @@ async def internal_error_handler(request: Request, exc: HTTPException):
 app.start_time = time.time()
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(
         app,
         host="0.0.0.0",
         port=8000,
-        log_level="info",
+        log_level="debug",
         timeout_keep_alive=60
     )
