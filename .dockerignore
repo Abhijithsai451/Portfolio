@@ -1,0 +1,19 @@
+git
+.idea
+.vscode
+__pycache__
+*.pyc
+*.log
+venv/
+.env
+local_data/
+tests/
+dist/
+build/
+*.DS_Store
+*.swp
+*.bak
+docker-compose.yml # If you don't need it in the final image
+ollama_data/
+redis_data/
+sentence_transformer_cache/
