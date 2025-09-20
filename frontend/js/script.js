@@ -1,4 +1,3 @@
-const API_BASE_URL = 'https://portfolio-production-eaf1.up.railway.app/'; // Python backend port
 // Preloader
 window.addEventListener('load', function () {
     const preloader = document.getElementById('preloader');
@@ -624,3 +623,65 @@ function createConnectionStatus() {
 // Check connection every 30 seconds
 setInterval(updateConnectionStatus, 30000);
 updateConnectionStatus();
+// Add this to your script.js to test the connection on page load
+document.addEventListener('DOMContentLoaded', function () {
+    checkBackendConnection();
+});
+
+async function checkBackendConnection() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+        if (response.ok) {
+            console.log('✅ Backend connection successful');
+            showConnectionStatus('connected');
+        } else {
+            console.log('❌ Backend connection failed');
+            showConnectionStatus('disconnected');
+        }
+    } catch (error) {
+        console.log('❌ Backend connection error:', error);
+        showConnectionStatus('error');
+    }
+}
+
+function showConnectionStatus(status) {
+    // Remove existing status indicator if any
+    const existingStatus = document.getElementById('connection-status');
+    if (existingStatus) {
+        existingStatus.remove();
+    }
+
+    const statusDiv = document.createElement('div');
+    statusDiv.id = 'connection-status';
+    statusDiv.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 12px;
+        z-index: 10000;
+    `;
+
+    if (status === 'connected') {
+        statusDiv.style.backgroundColor = '#4CAF50';
+        statusDiv.style.color = 'white';
+        statusDiv.textContent = '🟢 AI Agent Connected';
+    } else {
+        statusDiv.style.backgroundColor = '#F44336';
+        statusDiv.style.color = 'white';
+        statusDiv.textContent = '🔴 AI Agent Offline';
+    }
+
+    document.body.appendChild(statusDiv);
+
+    // Auto-hide after 5 seconds if connected
+    if (status === 'connected') {
+        setTimeout(() => {
+            statusDiv.style.opacity = '0';
+            statusDiv.style.transition = 'opacity 1s ease';
+            setTimeout(() => statusDiv.remove(), 1000);
+        }, 5000);
+    }
+}
