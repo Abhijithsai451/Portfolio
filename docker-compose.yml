@@ -15,7 +15,7 @@ services:
     volumes:
       - ./backend/knowledge_base.txt:/app/knowledge_base.txt
       - ./chroma_db:/app/chroma_db
-      - sentence_transformer_cache:/root/.cache/torch/sentence_transformers
+      - sentence_transformer_cache:/app/.cache/torch/sentence_transformers
 
     depends_on:
       - ollama

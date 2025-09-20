@@ -25,7 +25,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
+    allow_origins=["http://localhost:3000",
+                   "http://127.0.0.1:3000",
+                   "https://your-netlify-site.netlify.app",
+                   "https://*.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,7 +71,7 @@ if USE_VECTOR_DB:
 # Initialize sentence transformer for local embeddings (fallback)
 local_embedder = None
 try:
-    local_embedder = SentenceTransformer('all-MiniLM-L6-v2')
+    local_embedder = SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/.cache/torch/sentence_transformers')
     logger.info("Local embedding model loaded")
 except Exception as e:
     logger.warning(f"Failed to load local embedding model: {e}")
