@@ -16,6 +16,9 @@ RUN apt-get update || (sleep 5 && apt-get update) \
 
 # Copy requirements and install Python dependencies
 COPY backend/requirements.txt .
+ENV TORCH_INDEX_URL="https://download.pytorch.org/whl/cpu"
+
+
 RUN pip install -r requirements.txt
 
 # Copy application code

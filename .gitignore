@@ -3,3 +3,13 @@
 /.env
 /backend/logs/app.log
 /venv/
+/logs/app.log
+/package.json
+/.idea/Portfolio.iml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/misc.xml
+/.idea/material_theme_project_new.xml
+/frontend/css/style1.css
+/.idea/vcs.xml
+/.idea/workspace.xml
+/frontend/index1.html
