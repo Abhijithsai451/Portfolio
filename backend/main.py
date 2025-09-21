@@ -76,12 +76,11 @@ try:
 except Exception as e:
     logger.warning(f"Failed to load local embedding model: {e}")
 
-"""# Prometheus metrics
+# Prometheus metrics
 REQUEST_COUNT = Counter('request_count', 'Total API requests', ['method', 'endpoint', 'status'])
 REQUEST_LATENCY = Histogram('request_latency_seconds', 'Request latency', ['endpoint'])
 CHAT_REQUEST_COUNT = Counter('chat_requests_total', 'Total chat requests', ['status'])
 EMBEDDING_REQUEST_COUNT = Counter('embedding_requests_total', 'Total embedding requests', ['source'])
-"""
 
 
 # Instrument the app

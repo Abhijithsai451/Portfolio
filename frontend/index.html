@@ -3,395 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mathematician & Data Scientist Portfolio</title>
+    <title>Data Scientist Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<!-- Preloader -->
-<div id="preloader">
-    <div class="loader">
-        <div class="math-symbol">∑</div>
-        <div class="loading-text">Initializing Portfolio</div>
-    </div>
-</div>
-
-<!-- Animated Math Background -->
-<canvas id="math-canvas"></canvas>
-
-<!-- Header & Navigation -->
-<header id="header">
-    <div class="container nav-container">
-        <a href="#" class="logo">Abhijith <span>Sai</span></a>
-        <ul class="nav-links">
-            <div class="close-btn">
-                <i class="fas fa-times"></i>
-            </div>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#research">Research</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-        <div class="nav-right">
-            <div class="theme-toggle" id="theme-toggle">
-                <i class="fas fa-sun"></i>
-                <i class="fas fa-moon"></i>
-                <div class="theme-toggle-ball"></div>
-            </div>
-            <div class="menu-btn">
-                <i class="fas fa-bars"></i>
-            </div>
-        </div>
-    </div>
-</header>
-
-<!-- Hero Section -->
-<section id="home" class="hero">
+    <div id="particles-js"></div>
+    
     <div class="container">
-        <div class="hero-content">
-            <h1 class="hero-title">Transforming Data into <span>Insights</span></h1>
-            <p class="hero-subtitle">Mathematician & Data Scientist</p>
-            <p class="hero-desc">I use advanced mathematical models and machine learning to solve complex problems and
-                extract meaningful patterns from data.</p>
-            <div class="hero-btns">
-                <a href="#projects" class="btn">View Projects</a>
-                <a href="#research" class="btn btn-secondary">Research Papers</a>
-                <a href="#" class="btn btn-secondary" id="download-resume">Download CV</a>
+        <header>
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>Abhijith Sai</span>
             </div>
-        </div>
-        <div class="hero-visualization">
-            <div class="graph-container">
-                <div class="graph">Interactive Data Visualization</div>
+            <nav>
+                <ul>
+                    <li><a href="/index.html">Home</a></li>
+                    <li><a href="/projects.html">Projects</a></li>
+                    <li><a href="/about.html">About</a></li>
+                    <li><a href="/blog.html">Blog</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="hero">
+            <p class="tagline">Transforming Data into Insights</p>
+            <h1 class="typewriter">Mathematician & Data Scientist</h1>
+            <p class="title">Bridging Theory with Practical Solutions</p>
+            <p class="description">
+                I bridge advanced mathematical models with machine learning to solve complex problems and extract meaningful patterns from data, turning raw information into actionable intelligence.
+            </p>
+            
+            <div class="cta-buttons">
+                <a href="/projects.html" class="btn btn-primary">View My Work</a>
+                <a href="/contact.html" class="btn btn-secondary">Contact Me</a>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- AI Chat Section -->
-<section id="ai-chat" class="ai-chat-section">
-    <div class="container">
-        <h2 class="section-title">Ask Me Anything</h2>
-        <p class="section-subtitle">Chat with my AI assistant to learn more about my skills and experience</p>
-
-        <div class="chat-container">
-            <!-- Chat Messages -->
-            <div id="chat-messages" class="chat-messages">
-                <div class="message ai-message">
-                    <div class="message-content">
-                        Hi! I'm here to tell you about Abhijith's skills, projects, and experience. Try asking me a
-                        question or use the suggestions below.
+            
+            <!-- AI Assistant Section - Integrated in content -->
+            <div class="ai-assistant-section">
+                <div class="ai-header">
+                    <div class="ai-title">
+                        <i class="fas fa-robot"></i>
+                        <span>Ask Me Anything About Abhijith Sai</span>
+                    </div>
+                    <button class="toggle-btn">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-messages">
+                        <div class="message ai-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>Hello! I'm an AI assistant powered by Ollama. I can help you with the questions related to Abhijith Sai?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-input-container">
+                        <input type="text" class="ai-input" placeholder="Ask a question about data science..." id="ollama-input">
+                        <button class="ai-send-btn" id="ollama-send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Sample Questions -->
-            <div class="sample-questions">
-                <h4>Try asking:</h4>
-                <div class="sample-questions-grid">
-                    <button class="sample-question-btn">What are your technical skills?</button>
-                    <button class="sample-question-btn">Tell me about your machine learning projects</button>
-                    <button class="sample-question-btn">What's your experience with data analysis?</button>
-                    <button class="sample-question-btn">Can you explain your research papers?</button>
-                </div>
-            </div>
-
-            <!-- Chat Input -->
-            <div class="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Type your question about Abhijith's work...">
-                <button id="chat-send-btn" class="chat-send-btn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- About Section -->
-<section id="about" class="about">
-    <div class="container">
-        <h2 class="section-title">About Me</h2>
-        <div class="about-content">
-            <div class="about-text">
-                <h3>Bridging Mathematics and Data Science</h3>
-                <p>I specialize in applying advanced mathematical concepts to solve real-world data problems. With
-                    expertise in statistical modeling, machine learning, and algorithmic design, I transform complex
-                    data into actionable insights.</p>
-
-                <div class="specializations">
-                    <div class="specialization">
-                        <div class="spec-icon">
-                            <i class="fas fa-calculator"></i>
-                        </div>
-                        <div class="spec-content">
-                            <h4>Mathematical Modeling</h4>
-                            <p>Developing sophisticated models to represent complex systems and phenomena</p>
-                        </div>
-                    </div>
-                    <div class="specialization">
-                        <div class="spec-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="spec-content">
-                            <h4>Data Analysis</h4>
-                            <p>Extracting meaningful patterns and insights from large, complex datasets</p>
-                        </div>
-                    </div>
-                    <div class="specialization">
-                        <div class="spec-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <div class="spec-content">
-                            <h4>Machine Learning</h4>
-                            <p>Building predictive models and AI systems using advanced algorithms</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="about-stats">
+            
+            <div class="stats">
                 <div class="stat">
-                    <div class="stat-value" data-count="42">0</div>
+                    <div class="stat-number" id="project-count">0</div>
                     <div class="stat-label">Projects Completed</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value" data-count="17">0</div>
-                    <div class="stat-label">Research Papers</div>
+                    <div class="stat-number" id="client-count">0</div>
+                    <div class="stat-label">Happy Clients</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value" data-count="9">0</div>
-                    <div class="stat-label">Algorithms Developed</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" data-count="96">0</div>
-                    <div class="stat-label">Models Trained</div>
+                    <div class="stat-number" id="algorithm-count">0</div>
+                    <div class="stat-label">Algorithms</div>
                 </div>
             </div>
-        </div>
-
-        <div class="skills-section">
-            <h3>Technical Expertise</h3>
-            <div class="skills-container">
-                <div class="skill">
-                    <div class="skill-info">
-                        <span>Python & R</span>
-                        <span>98%</span>
-                    </div>
-                    <div class="skill-bar">
-                        <div class="skill-progress" data-width="98%"></div>
-                    </div>
+            
+            <div class="skills">
+                <div class="skill-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Data Analysis</h3>
+                    <p>Python, R, SQL</p>
                 </div>
-                <div class="skill">
-                    <div class="skill-info">
-                        <span>Machine Learning</span>
-                        <span>95%</span>
-                    </div>
-                    <div class="skill-bar">
-                        <div class="skill-progress" data-width="95%"></div>
-                    </div>
+                <div class="skill-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>Machine Learning</h3>
+                    <p>TensorFlow, PyTorch</p>
                 </div>
-                <div class="skill">
-                    <div class="skill-info">
-                        <span>Statistical Analysis</span>
-                        <span>97%</span>
-                    </div>
-                    <div class="skill-bar">
-                        <div class="skill-progress" data-width="97%"></div>
-                    </div>
+                <div class="skill-card">
+                    <i class="fas fa-calculator"></i>
+                    <h3>Mathematics</h3>
+                    <p>Statistics, Calculus</p>
                 </div>
-                <div class="skill">
-                    <div class="skill-info">
-                        <span>Data Visualization</span>
-                        <span>93%</span>
-                    </div>
-                    <div class="skill-bar">
-                        <div class="skill-progress" data-width="93%"></div>
-                    </div>
-                </div>
-                <div class="skill">
-                    <div class="skill-info">
-                        <span>Big Data Technologies</span>
-                        <span>88%</span>
-                    </div>
-                    <div class="skill-bar">
-                        <div class="skill-progress" data-width="88%"></div>
-                    </div>
+                <div class="skill-card">
+                    <i class="fas fa-database"></i>
+                    <h3>Big Data</h3>
+                    <p>Hadoop, Spark</p>
                 </div>
             </div>
-        </div>
+        </section>
+        
+        <footer>
+            <p>© 2023 Data Scientist Portfolio | Bridging Math and Machine Learning</p>
+        </footer>
     </div>
-</section>
 
-<!-- Projects Section -->
-<section id="projects" class="projects">
-    <div class="container">
-        <h2 class="section-title">Data Projects</h2>
-
-        <div class="projects-filter">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="ml">Machine Learning</button>
-            <button class="filter-btn" data-filter="stats">Statistical Analysis</button>
-            <button class="filter-btn" data-filter="optimization">Optimization</button>
-        </div>
-
-        <div class="projects-grid">
-            <!-- Project Cards (6 total) -->
-            <div class="project-card visible" data-category="ml">
-                <div class="project-img">
-                    <i class="fas fa-chart-line fa-3x"></i>
-                    <div class="project-hover">
-                        <a href="#" class="btn">View Case Study</a>
-                    </div>
-                </div>
-                <div class="project-content">
-                    <h3 class="project-title">Predictive Customer Analytics</h3>
-                    <p class="project-desc">Developed a machine learning model to predict customer churn with 94%
-                        accuracy using ensemble methods.</p>
-                    <div class="project-tags">
-                        <span class="project-tag">Python</span>
-                        <span class="project-tag">Scikit-Learn</span>
-                        <span class="project-tag">XGBoost</span>
-                    </div>
-                    <a href="#" class="btn">Project Details</a>
-                </div>
-            </div>
-
-            <!-- Additional project cards would go here -->
-            <!-- ... (other 5 project cards) ... -->
-
-        </div>
-    </div>
-</section>
-
-<!-- Research Section -->
-<section id="research" class="research">
-    <div class="container">
-        <h2 class="section-title">Research & Publications</h2>
-
-        <div class="research-tabs">
-            <button class="research-tab active" data-tab="papers">Papers</button>
-            <button class="research-tab" data-tab="conferences">Conferences</button>
-            <button class="research-tab" data-tab="algorithms">Algorithms</button>
-        </div>
-
-        <div class="research-content">
-            <!-- Research items would go here -->
-            <!-- ... (research items) ... -->
-
-        </div>
-    </div>
-</section>
-
-<!-- Contact Section -->
-<section id="contact" class="contact">
-    <div class="container">
-        <h2 class="section-title">Get In Touch</h2>
-        <div class="contact-container">
-            <div class="contact-info">
-                <h3>Let's Collaborate on Data Solutions</h3>
-                <p>I'm always interested in discussing new projects, research opportunities, and data challenges.</p>
-
-                <div class="contact-detail">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div>
-                        <h4>Email</h4>
-                        <p>researcher@datascience.com</p>
-                    </div>
-                </div>
-                <div class="contact-detail">
-                    <div class="contact-icon">
-                        <i class="fas fa-phone"></i>
-                    </div>
-                    <div>
-                        <h4>Phone</h4>
-                        <p>+1 (555) 123-4567</p>
-                    </div>
-                </div>
-                <div class="contact-detail">
-                    <div class="contact-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div>
-                        <h4>Location</h4>
-                        <p>Boston, MA</p>
-                    </div>
-                </div>
-
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-google-scholar"></i></a>
-                </div>
-            </div>
-            <div class="contact-form">
-                <form id="contact-form">
-                    <input type="text" placeholder="Your Name" required>
-                    <input type="email" placeholder="Your Email" required>
-                    <input type="text" placeholder="Subject" required>
-                    <textarea placeholder="Your Message" required></textarea>
-                    <button type="submit" class="btn">Send Message</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Footer -->
-<footer>
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <a href="#" class="logo">Data<span>Sci</span></a>
-                <p>Mathematician & Data Scientist</p>
-            </div>
-            <div class="footer-links">
-                <h4>Navigation</h4>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#research">Research</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </div>
-            <div class="footer-links">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="#">CV</a></li>
-                    <li><a href="#">Publications</a></li>
-                    <li><a href="#">Code Repository</a></li>
-                    <li><a href="#">Blog</a></li>
-                </ul>
-            </div>
-            <div class="footer-newsletter">
-                <h4>Stay Updated</h4>
-                <p>Subscribe to my newsletter for updates on research and projects</p>
-                <form class="newsletter-form">
-                    <input type="email" placeholder="Your Email">
-                    <button type="submit">Subscribe</button>
-                </form>
-            </div>
-        </div>
-        <div class="copyright">
-            <p>© 2023 Data Scientist Portfolio. All rights reserved.</p>
-        </div>
-    </div>
-</footer>
-
-<!-- Back to Top Button -->
-<a href="#" class="back-to-top" id="back-to-top">
-    <i class="fas fa-arrow-up"></i>
-</a>
-
-<!-- Toast Notification -->
-<div class="toast" id="toast">
-    Message sent successfully!
-</div>
-
-<script src="./js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/js/script.js"></script>
 </body>
 </html>
