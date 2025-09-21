@@ -1,5 +1,5 @@
 [build]
-publish = "."
+publish = "frontend"
 command = "echo 'No build needed for static site'"
 
 [build.environment]
@@ -7,7 +7,7 @@ NODE_VERSION = "18"
 
 [[redirects]]
 from = "/*"
-to = "frontend/index.html"
+to = "/index.html"
 status = 200
 
 [[headers]]
