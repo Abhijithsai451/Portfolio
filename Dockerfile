@@ -16,7 +16,7 @@ RUN apt-get update || (sleep 5 && apt-get update) \
 
 # Copy requirements and install Python dependencies
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy application code
 COPY . .
