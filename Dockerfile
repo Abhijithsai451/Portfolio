@@ -1,36 +1,37 @@
+# Stage 1: Builder - for installing dependencies and compiling
+FROM python:3.11-slim-buster AS builder
+
+WORKDIR /app
+
+# Install system dependencies needed for building Python packages
+# build-essential includes gcc, g++, and other necessary tools
+RUN apt-get update || (sleep 5 && apt-get update) \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file early to leverage Docker's layer caching
+COPY backend/requirements.txt .
+
+# Set environment variable for CPU-only PyTorch (important for smaller builds)
+ENV TORCH_INDEX_URL="https://download.pytorch.org/whl/cpu"
+
+# Install all Python dependencies.
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Stage 2: Runtime - for running the application
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update || (sleep 5 && apt-get update) \
-    && apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Copy only the installed Python packages from the builder stage's user site-packages
+COPY --from=builder /root/.local /usr/local
 
-# Copy requirements file for caching
-COPY backend/requirements.txt .
+# Set environment variables to ensure Python finds the installed packages
+ENV PATH="/usr/local/bin:$PATH"
+ENV PYTHONPATH="/usr/local/lib/python3.11/site-packages:$PYTHONPATH"
 
-# Set environment variable for CPU-only PyTorch. This is already correctly placed.
-ENV TORCH_INDEX_URL="https://download.pytorch.org/whl/cpu"
-
-# --- Install core dependencies (excluding potentially heavy ones like sentence-transformers, chromadb, huggingface-hub) ---
-# This step installs the majority of your requirements that are generally smaller and less complex.
-RUN cat requirements.txt | grep -vE "sentence-transformers|chromadb|huggingface-hub" > /tmp/requirements_core.txt && \
-    pip install --no-cache-dir -r /tmp/requirements_core.txt && \
-    rm /tmp/requirements_core.txt
-
-# --- Install chromadb separately ---
-# Installing chromadb in its own step. It can involve C++ compilation.
-RUN pip install --no-cache-dir chromadb==0.4.22
-
-# --- Install sentence-transformers and huggingface-hub ---
-# These packages often have large downloads (especially sentence-transformers with its PyTorch dependency).
-# The TORCH_INDEX_URL environment variable from above will apply to this step.
-RUN pip install --no-cache-dir sentence-transformers==2.2.2 huggingface-hub==0.10.0
-
-# Copy application code
+# Copy application code. Ensure your .dockerignore is effective here!
 COPY . .
 
 # Create non-root user
