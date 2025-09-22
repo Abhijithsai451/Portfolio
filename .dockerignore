@@ -42,4 +42,6 @@ Dockerfile
 /package.json
 /frontend/
 
+chroma_db/
+.cache
 
