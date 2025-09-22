@@ -1,5 +1,5 @@
 # Stage 1: Builder - for installing dependencies and compiling
-FROM python:3.11-slim-buster AS builder
+FROM python:3.11-slim-bullseye AS builder
 
 WORKDIR /app
 
