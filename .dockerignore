@@ -31,10 +31,10 @@ ollama_data/
 redis_data/
 sentence_transformer_cache/
 
-# Files not needed in the final image or specific to local development
-docker-compose.yml # Exclude if only used for local development
+
+docker-compose.yml 
 *.DS_Store # macOS specific
-Dockerfile # No need to copy the Dockerfile into the image itself
+Dockerfile 
 
 # Frontend/UI files (assuming this Docker image is for the backend only)
 /uiux.html
@@ -43,8 +43,3 @@ Dockerfile # No need to copy the Dockerfile into the image itself
 /frontend/css/style1.css
 /frontend/index1.html
 
-# Data files (only exclude if they are NOT needed at runtime by the application)
-# Based on your main.py, knowledge_base.txt might be loaded at runtime,
-# so keep it if your app needs it. If it's only for building an index once,
-# then you could exclude it. For now, we assume it IS needed.
-# knowledge_base.txt
