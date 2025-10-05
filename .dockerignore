@@ -23,7 +23,6 @@ build/
 
 # Log and environment files
 *.log
-.env
 
 # Local data and cache directories (specific to your project)
 local_data/

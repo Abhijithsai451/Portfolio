@@ -29,5 +29,6 @@ from sentence_transformers import SentenceTransformer
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from backend.configuration.dashboard_config import Monitor
-from backend.configuration import logging_config
+from fastapi.responses import PlainTextResponse
+import aiohttp  # For communicating with the chat service
+from utils.monitor import Monitor

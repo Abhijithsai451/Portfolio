@@ -11,13 +11,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        # Use a specific version of the Railway CLI for stability
+        run: npm install -g @railwaydev/cli@latest
+
+      - name: Deploy to Railway
+        env:
+          # RAILWAY_TOKEN is a secret you must set in your GitHub repository settings
+          # Go to your repository > Settings > Secrets and variables > Actions > New repository secret
+          # Name it RAILWAY_TOKEN and paste your Railway API token.
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          # Optional: Specify a Railway environment if you have multiple (e.g., production, staging)
+          # RAILWAY_ENVIRONMENT: production
         run: |
-          python -m pip install --upgrade pip
+          echo "Deploying to Railway..."
+          # The 'railway deploy' command will automatically find your railway.json file
+          # and deploy all defined services within it.
+          # It uses the RAILWAY_TOKEN from the environment variables for authentication.
+          railway deploy --service web-service --service chat-service --commit-sha ${{ github.sha }}
+          echo "Deployment initiated. Check Railway dashboard for status."

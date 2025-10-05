@@ -1,26 +1,21 @@
-from fastapi.responses import PlainTextResponse
-
-from backend.imports_file import *
 from slowapi import _rate_limit_exceeded_handler
+
+from utils.imports_file import *
 
 # Load environment variables
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-logger.info("Starting Portfolio AI Agent...")
+logger.info("Starting Chat AI Service...")
 
-# Initializing Monitor
-monitor = Monitor()
-app = FastAPI(title="Portfolio AI Agent",
+monitor = Monitor()  # This will only monitor chat service specific metrics
+
+app = FastAPI(title="Portfolio AI Chat Service",
               description="AI powered chat agent for portfolio website with RAG Capabilities",
               version="1.0.0",
               docs_url="/api/docs",
               redoc_url="/api/redoc"
               )
-# Rate Limiting
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Middleware
 app.add_middleware(
@@ -28,24 +23,24 @@ app.add_middleware(
     allow_origins=["http://localhost:3000",
                    "http://127.0.0.1:3000",
                    "https://your-netlify-site.netlify.app",
-                   "https://*.netlify.app"],
+                   "https://*.netlify.app",
+                   os.getenv("CORE_SERVICE_URL", "http://localhost:8000")],  # Allow core service
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=os.getenv("ALLOWED_HOSTS", "*").split(","))
-app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "llama3.1")
 KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_FILE", "knowledge_base.txt")
-USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "false").lower() == "true"
+USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"  # Ensure this is true for chat service
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # 5 minutes
 
-# Initializing Redis for caching
+# Initializing Redis for caching (can be shared with core service if accessible)
 try:
     redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
     redis_client.ping()
@@ -68,26 +63,16 @@ if USE_VECTOR_DB:
     except Exception as e:
         logger.error(f"Failed to initialize ChromaDB: {e}")
 
-# Initialize sentence transformer for local embeddings (fallback)
+# Initialize sentence transformer for local embeddings
 local_embedder = None
 try:
-    local_embedder = SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/.cache/torch/sentence_transformers')
+    local_embedder = SentenceTransformer('paraphrase-MiniLM-L3-v2', cache_folder='./.cache/torch/sentence_transformers')
     logger.info("Local embedding model loaded")
 except Exception as e:
-    logger.warning(f"Failed to load local embedding model: {e}")
-
-# Prometheus metrics
-REQUEST_COUNT = Counter('request_count', 'Total API requests', ['method', 'endpoint', 'status'])
-REQUEST_LATENCY = Histogram('request_latency_seconds', 'Request latency', ['endpoint'])
-CHAT_REQUEST_COUNT = Counter('chat_requests_total', 'Total chat requests', ['status'])
-EMBEDDING_REQUEST_COUNT = Counter('embedding_requests_total', 'Total embedding requests', ['source'])
+    logger.warning(f"Failed to load local embedding model: {e}. Ensure model files are in volume or downloaded.")
 
 
-# Instrument the app
-# Instrumentator().instrument(app).expose(app, endpoint="/api/metrics")
-
-
-# Pydantic models
+# Pydantic models for chat
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="User message to process")
     session_id: Optional[str] = Field(None, description="Optional session ID for conversation history")
@@ -99,24 +84,10 @@ class ChatResponse(BaseModel):
     processing_time: float
 
 
-class HealthResponse(BaseModel):
-    status: str
-    message: str
-    version: str
-    uptime: float
-
-
-class StatsResponse(BaseModel):
-    total_chunks: int
-    total_requests: int
-    cache_hits: int
-    cache_misses: int
-    average_response_time: float
-
-
 # Load knowledge base from file
 def load_knowledge_base(file_path: str) -> str:
     try:
+        # Assuming knowledge_base.txt is in the chat_service directory or its parent
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read().strip()
             logger.info(f"Loaded knowledge base from {file_path} ({len(content)} characters)")
@@ -124,10 +95,6 @@ def load_knowledge_base(file_path: str) -> str:
     except Exception as e:
         logger.error(f"Error loading knowledge base: {e}")
         raise HTTPException(status_code=500, detail="Failed to load knowledge base")
-
-
-# Knowledge base - Enhanced with your portfolio data
-KNOWLEDGE_BASE = load_knowledge_base(KNOWLEDGE_BASE_FILE)
 
 
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
@@ -155,14 +122,14 @@ def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-# Chunk the knowledge base
+# Load and chunk knowledge base on startup
+KNOWLEDGE_BASE = load_knowledge_base(KNOWLEDGE_BASE_FILE)
 knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
 logger.info(f"Knowledge base chunks: {len(knowledge_chunks)}")
 
 # Initialize vector database with knowledge chunks
 if USE_VECTOR_DB and collection:
     try:
-        # Check if collection is empty
         if collection.count() == 0:
             embeddings = []
             if local_embedder:
@@ -174,8 +141,10 @@ if USE_VECTOR_DB and collection:
                 ids=[f"chunk_{i}" for i in range(len(knowledge_chunks))]
             )
             logger.info(f"Added {len(knowledge_chunks)} chunks to vector database")
+        else:
+            logger.info(f"ChromaDB collection already contains {collection.count()} chunks. Skipping initial load.")
     except Exception as e:
-        logger.error(f"Failed to initialize vector database: {e}")
+        logger.error(f"Failed to initialize vector database with chunks: {e}")
 
 
 # Cache functions
@@ -200,7 +169,6 @@ def set_cache(key: str, value: Any, ttl: int = CACHE_TTL):
 
 async def generate_embedding(text: str) -> List[float]:
     """Generate text embedding with fallback strategies"""
-    # EMBEDDING_REQUEST_COUNT.labels(source='ollama').inc()
     monitor.increment_embedding_requests(source='ollama')
 
     # Try Ollama first
@@ -247,11 +215,12 @@ async def find_relevant_context(query: str, top_k: int = 3) -> str:
             )
             relevant_chunks = results['documents'][0] if results['documents'] else []
         else:
-            # Use semantic search
+            # Use semantic search (fallback if vector DB is not used/failed)
             query_embedding = await generate_embedding(query)
             similarities = []
 
             for chunk in knowledge_chunks:
+                # This approach would be very slow for many chunks without pre-computed embeddings
                 chunk_embedding = await generate_embedding(chunk)
                 similarity = np.dot(query_embedding, chunk_embedding) / (
                         np.linalg.norm(query_embedding) * np.linalg.norm(chunk_embedding)
@@ -262,6 +231,7 @@ async def find_relevant_context(query: str, top_k: int = 3) -> str:
             relevant_chunks = [chunk for chunk, score in similarities[:top_k] if score > 0.1]
 
         if not relevant_chunks:
+            # If no relevant chunks found, provide a default from knowledge base
             relevant_chunks = knowledge_chunks[:2]
 
         result = "\n\n".join(relevant_chunks)
@@ -302,40 +272,8 @@ async def chat_with_ollama(messages: List[dict]) -> str:
     return "Sorry, I'm experiencing technical difficulties. Please try again later."
 
 
-@app.get("/", include_in_schema=False)
-async def root():
-    return {"message": "Portfolio AI Agent API is running"}
-
-
-@app.get("/api/health", response_model=HealthResponse)
-async def health_check():
-    return {
-        "status": "OK",
-        "message": "Service healthy",
-        "version": "2.0.0",
-        "uptime": time.time() - app.start_time
-    }
-
-
-@app.get("/api/metrics")
-async def metrics():
-    return PlainTextResponse(generate_latest(), media_type="text/plain; version=0.0.4; charset=utf-8")
-
-
-@app.get("/api/stats", response_model=StatsResponse)
-async def get_stats():
-    return {
-        "total_chunks": len(knowledge_chunks),
-        "total_requests": 0,  # Would need tracking
-        "cache_hits": 0,  # Would need tracking
-        "cache_misses": 0,  # Would need tracking
-        "average_response_time": 0.0
-    }
-
-
 @app.post("/api/chat", response_model=ChatResponse)
-@limiter.limit("10/minute")
-async def chat_endpoint(request: Request, chat_request: ChatRequest):
+async def chat_endpoint(chat_request: ChatRequest):
     start_time = time.time()
     monitor.increment_chat_requests("received")
     try:
@@ -363,7 +301,7 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
         processing_time = time.time() - start_time
 
         monitor.increment_chat_requests(status="success")
-        monitor.set_response_time(time.time() - start_time)
+        monitor.set_response_time(processing_time)
         return ChatResponse(
             response=response,
             session_id=chat_request.session_id,
@@ -379,15 +317,24 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
 
 @app.post("/api/knowledge/refresh")
 async def refresh_knowledge():
-    """Force reload of knowledge base"""
+    """Force reload of knowledge base and re-index vector DB"""
     global KNOWLEDGE_BASE, knowledge_chunks
     try:
         KNOWLEDGE_BASE = load_knowledge_base(KNOWLEDGE_BASE_FILE)
         knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
 
         if USE_VECTOR_DB and collection:
+            # Clear existing data and re-add
             collection.delete(ids=[f"chunk_{i}" for i in range(collection.count())])
-            # Re-add chunks to vector DB
+            embeddings = []
+            if local_embedder:
+                embeddings = local_embedder.encode(knowledge_chunks).tolist()
+            collection.add(
+                documents=knowledge_chunks,
+                embeddings=embeddings if embeddings else None,
+                ids=[f"chunk_{i}" for i in range(len(knowledge_chunks))]
+            )
+            logger.info(f"Re-indexed {len(knowledge_chunks)} chunks into vector database")
 
         return {"status": "success", "message": f"Reloaded {len(knowledge_chunks)} chunks"}
     except Exception as e:
@@ -416,10 +363,12 @@ async def internal_error_handler(request: Request, exc: HTTPException):
 app.start_time = time.time()
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
-        log_level="debug",
+        port=8001,  # Chat service will run on a different internal port, e.g., 8001
+        log_level="info",
         timeout_keep_alive=60
     )
