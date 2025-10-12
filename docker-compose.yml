@@ -10,7 +10,7 @@ services:
       - "8000:8000"
     environment:
 
-      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,192.168.65.1,localhost:8000,127.0.0.1:8000"
       REDIS_URL: "redis://redis:6379" # Connects to the 'redis' service defined below
       CHAT_SERVICE_URL: "http://chat_service:8001"
     # Docker Compose can load environment variables from a .env file at the project root
@@ -25,10 +25,10 @@ services:
   # Chat Service (AI/ML logic, ChromaDB, Ollama interaction)
   chat_service:
     build:
-      context: . # Build context is the project root
+      context: .
       dockerfile: chat_service/Dockerfile
     environment:
-      OLLAMA_BASE_URL: "http://host.docker.internal:11434" # Adjust this based on your Ollama setup
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
       EMBEDDING_MODEL: "nomic-embed-text"
       CHAT_MODEL: "llama3.1"
       KNOWLEDGE_BASE_FILE: "chat_service/knowledge_base.txt"
@@ -46,16 +46,15 @@ services:
 
   # Redis service for caching and session management
   redis:
-    image: "redis/redis-stack-server:latest" # A full-featured Redis with GUI (RedisInsight)
+    image: "redis/redis-stack-server:latest"
     ports:
-      - "6379:6379" # Map host port 6379 to container port 6379
-      - "8002:8001" # Optional: Map RedisInsight GUI (if you want to access it from host)
+      - "6379:6379"
+      - "8002:8001"
     volumes:
       - redis_data:/data # Persist Redis data
     command: redis-stack-server /etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
 
 volumes:
-  # Define named volumes for persistent data
   chat_service_chroma_db_data:
   chat_service_st_cache:
   redis_data:

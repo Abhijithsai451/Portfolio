@@ -1,6 +1,9 @@
 from slowapi import _rate_limit_exceeded_handler
-
+from sentence_transformers import SentenceTransformer
 from utils.imports_file import *
+import chromadb
+from chromadb.config import Settings
+import numpy as np
 
 # Load environment variables
 load_dotenv()
@@ -29,6 +32,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+allowed_hosts_list = os.getenv("ALLOWED_HOSTS", "*").split(",")
+logger.info(f"Configured ALLOWED_HOSTS for TrustedHostMiddleware: {allowed_hosts_list}")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=os.getenv("ALLOWED_HOSTS", "*").split(","))
 
 # Configuration

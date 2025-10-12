@@ -4,7 +4,7 @@ from utils.imports_file import *
 
 # Load environment variables
 load_dotenv()
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s -  %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.info("Starting Core API Service...")
 
@@ -33,15 +33,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=os.getenv("ALLOWED_HOSTS", "*").split(","))
+allowed_hosts_list = os.getenv("ALLOWED_HOSTS", "*").split(",")
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts_list)  # Use the variable directly
+logger.info(f"Configured ALLOWED_HOSTS for TrustedHostMiddleware: {allowed_hosts_list}")
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # 5 minutes
-# IMPORTANT: This is the internal URL/port for the chat service.
-# On Railway, this will typically be the service name if they are in the same project.
-CHAT_SERVICE_URL = os.getenv("CHAT_SERVICE_URL", "http://localhost:8001")  # Default to local for dev
+
+CHAT_SERVICE_URL = os.getenv("CHAT_SERVICE_URL", "http://localhost:8001")
 
 # Initializing Redis for caching (can be shared with chat service if accessible)
 try:
@@ -92,7 +93,6 @@ async def root():
 
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():
-    # You might want to also check the health of the chat service here
     return {
         "status": "OK",
         "message": "Core Service healthy",
