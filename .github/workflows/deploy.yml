@@ -20,12 +20,9 @@ jobs:
 
       - name: Deploy to Railway
         env:
-          # RAILWAY_TOKEN is a secret you must set in your GitHub repository settings
-          # Go to your repository > Settings > Secrets and variables > Actions > New repository secret
-          # Name it RAILWAY_TOKEN and paste your Railway API token.
+
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          # Optional: Specify a Railway environment if you have multiple (e.g., production, staging)
-          # RAILWAY_ENVIRONMENT: production
+
         run: |
           echo "Deploying to Railway..."
           # The 'railway deploy' command will automatically find your railway.json file
