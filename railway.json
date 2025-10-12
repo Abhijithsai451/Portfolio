@@ -1,59 +1,29 @@
 {
-  "$schema": "https://docs.railway.app/railway.schema.json",
-  "build": {
-    "builder": "DOCKERFILE"
-  },
-  "deploy": {
-    "numReplicas": 1,
-    "startCommand": "uvicorn web_service.main:app --host 0.0.0.0 --port $PORT --log-level info",
-    "healthcheckPath": "/api/health",
-    "environment": {
-      "ALLOWED_HOSTS": "your-railway-domain.railway.app,localhost,127.0.0.1",
-      "REDIS_URL": "${{REDIS_URL}}",
-      "CHAT_SERVICE_URL": "http://chat-service:8001"
-    }
-  },
+  "$schema": "https://docs.railway.app/schemas/railway.schema.json",
   "services": [
     {
       "name": "web-service",
-      "buildCommand": "docker build -t web-service -f web_service/Dockerfile .",
-      "startCommand": "uvicorn core_service.main:app --host 0.0.0.0 --port $PORT --log-level info",
-      "healthcheckPath": "/api/health",
-      "rootDirectory": ".",
-      "environment": {
-        "ALLOWED_HOSTS": "${{CORE_SERVICE_DOMAIN}},localhost,127.0.0.1",
-        "REDIS_URL": "${{REDIS_URL}}",
-        "CHAT_SERVICE_URL": "http://chat-service:8001"
+      "builder": "DOCKERFILE",
+      "rootDirectory": "web_service",
+      "dockerfile": "Dockerfile",
+      "deploy": {
+        "numReplicas": 1,
+        "startCommand": "gunicorn --worker-class gevent --workers 4 --bind 0.0.0.0:8000 project.asgi:application",
+        "healthcheckPath": "/",
+        "healthcheckTimeout": 300
       }
     },
     {
       "name": "chat-service",
-      "buildCommand": "docker build -t chat-service -f chat_service/Dockerfile .",
-      "startCommand": "uvicorn chat_service.main:app --host 0.0.0.0 --port 8001 --log-level info",
-      "healthcheckPath": "/api/health",
-      "rootDirectory": ".",
-      "environment": {
-        "ALLOWED_HOSTS": "localhost,127.0.0.1,${{CORE_SERVICE_DOMAIN}}",
-        "OLLAMA_BASE_URL": "${{OLLAMA_BASE_URL}}",
-        "EMBEDDING_MODEL": "nomic-embed-text",
-        "CHAT_MODEL": "llama3.1",
-        "KNOWLEDGE_BASE_FILE": "chat_service/knowledge_base.txt",
-        "USE_VECTOR_DB": "true",
-        "REDIS_URL": "${{REDIS_URL}}",
-        "CACHE_TTL": "300"
-      },
-      "volumes": [
-        {
-          "name": "chat-volume",
-          "path": "/app/chroma_db",
-          "size": "500MB"
-        },
-        {
-          "name": "chat-volume-cache",
-          "path": "/app/.cache/torch/sentence_transformers",
-          "size": "500MB"
-        }
-      ]
+      "builder": "DOCKERFILE",
+      "rootDirectory": "chat_service",
+      "dockerfile": "Dockerfile",
+      "deploy": {
+        "numReplicas": 1,
+        "startCommand": "uvicorn main:app --host 0.0.0.0 --port 8001",
+        "healthcheckPath": "/health",
+        "healthcheckTimeout": 300
+      }
     }
   ]
 }
