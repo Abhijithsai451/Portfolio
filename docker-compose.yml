@@ -1,52 +1,60 @@
 version: '3.8'
 
 services:
-  portfolio-backend:
-    build: .
+  # web Service (web-facing API gateway, proxies to chat_service)
+  web_service:
+    build:
+      context: . # Build context is the project root
+      dockerfile: web_service/Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - REDIS_URL=redis://redis:6379
-      - USE_VECTOR_DB=true
-      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,portfolio-backend,172.18.0.2
 
+      ALLOWED_HOSTS: "localhost,127.0.0.1,192.168.65.1,localhost:8000,127.0.0.1:8000"
+      REDIS_URL: "redis://redis:6379" # Connects to the 'redis' service defined below
+      CHAT_SERVICE_URL: "http://chat_service:8001"
+    # Docker Compose can load environment variables from a .env file at the project root
+    env_file:
+      - .env
     volumes:
-      - ./backend/knowledge_base.txt:/app/knowledge_base.txt
-      - ./chroma_db:/app/chroma_db
-      - sentence_transformer_cache:/app/.cache/torch/sentence_transformers
-
+      - .:/app
     depends_on:
-      - ollama
+      - chat_service
       - redis
-    restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
+  # Chat Service (AI/ML logic, ChromaDB, Ollama interaction)
+  chat_service:
+    build:
+      context: .
+      dockerfile: chat_service/Dockerfile
+    environment:
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      EMBEDDING_MODEL: "nomic-embed-text"
+      CHAT_MODEL: "llama3.1"
+      KNOWLEDGE_BASE_FILE: "chat_service/knowledge_base.txt"
+      USE_VECTOR_DB: "true"
+      REDIS_URL: "redis://redis:6379"
+      CACHE_TTL: "300"
+    env_file:
+      - .env
     volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
+      - chat_service_chroma_db_data:/app/chroma_db
+      - chat_service_st_cache:/app/.cache/torch/sentence_transformers
+      - .:/app
+    depends_on:
+      - redis
 
+  # Redis service for caching and session management
   redis:
-    image: redis:latest
+    image: "redis/redis-stack-server:latest"
     ports:
       - "6379:6379"
+      - "8002:8001"
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    restart: unless-stopped
+      - redis_data:/data # Persist Redis data
+    command: redis-stack-server /etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
 
 volumes:
-  ollama_data:
+  chat_service_chroma_db_data:
+  chat_service_st_cache:
   redis_data:
-  sentence_transformer_cache:

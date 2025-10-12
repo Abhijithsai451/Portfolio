@@ -5,7 +5,7 @@ Utility to manage and update the knowledge base
 
 import argparse
 
-from main import load_knowledge_base, chunk_text
+from backend.main import load_knowledge_base, chunk_text
 
 
 def show_stats():
