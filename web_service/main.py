@@ -91,6 +91,11 @@ async def root():
     return {"message": "Portfolio AI Agent Core API is running"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
+
+
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():
     return {
@@ -130,10 +135,14 @@ async def chat_endpoint_proxy(request: Request, chat_request: ChatRequest):
         async with aiohttp.ClientSession() as session:
             async with session.post(
                     f"{CHAT_SERVICE_URL}/api/chat",
-                    json=chat_request.model_dump(),  # Use model_dump() for Pydantic v2+
-                    timeout=90  # Give enough time for the AI service to respond
+                    json=chat_request.model_dump(exclude_none=True),  # Exclude None to avoid potential validation issues
+                    timeout=90
             ) as response:
-                response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+                if response.status != 200:
+                    error_text = await response.text()
+                    logger.error(f"Chat service returned status {response.status}: {error_text}")
+                    response.raise_for_status()
+
                 chat_response_data = await response.json()
                 processing_time = time.time() - start_time
                 CORE_CHAT_PROXY_COUNT.labels(status="success").inc()
@@ -142,10 +151,10 @@ async def chat_endpoint_proxy(request: Request, chat_request: ChatRequest):
                     session_id=chat_response_data.get("session_id"),
                     processing_time=processing_time
                 )
-    except aiohttp.ClientError as e:
+    except aiohttp.ClientResponseError as e:
         processing_time = time.time() - start_time
         CORE_CHAT_PROXY_COUNT.labels(status="error").inc()
-        logger.error(f"Failed to communicate with chat service: {e}")
+        logger.error(f"Failed to communicate with chat service: {e.status}, message='{e.message}'")
         raise HTTPException(status_code=503, detail="AI chat service is unavailable")
     except Exception as e:
         processing_time = time.time() - start_time

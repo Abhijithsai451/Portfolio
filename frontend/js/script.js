@@ -197,7 +197,7 @@ function hideTypingIndicator(indicatorElement) {
 }
 
 // API configuration - Update for production
-const API_BASE_URL = window.location.hostname === 'localhost'
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
     : 'https://your-backend-production-url.railway.app'; // <--- IMPORTANT: Update this URL for your production environment
 
@@ -262,11 +262,8 @@ async function handleSendMessage(message) {
     addMessage(message, true); // User message
 
     if (chatInput) {
-        chatInput.style.opacity = '0.5';
-        setTimeout(() => {
-            chatInput.value = '';
-            chatInput.style.opacity = '1';
-        }, 300);
+        chatInput.value = '';
+        chatInput.focus();
     }
 
 
@@ -319,8 +316,13 @@ function initChatToggle() {
     }
 }
 
+// Flag to prevent multiple initializations
+let isChatInitialized = false;
+
 // Initialize Chat Event Listeners
 function initChatSection() {
+    if (isChatInitialized) return;
+
     const chatSendBtn = document.querySelector('.ai-send-btn'); // Using class selector
 
     if (!chatInput) {
@@ -349,15 +351,19 @@ function initChatSection() {
         }
     });
 
-    // Send message on Enter key
-    chatInput.addEventListener('keypress', (e) => {
+    // Send message on Enter key (use keydown to prevent default form submission if applicable)
+    chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent default behavior
             const message = chatInput.value.trim();
             if (message) {
                 handleSendMessage(message);
             }
         }
     });
+
+    isChatInitialized = true;
+    console.log("Chat section initialized successfully.");
 }
 
 // Add connection status indicator
@@ -406,31 +412,25 @@ function checkBackendConnection() {
 }
 
 // Initialize when the page loads
+// Initialize when the page loads
 document.addEventListener('DOMContentLoaded', function () {
+    // Only run if not already running (though DOMContentLoaded should only fire once per page load)
+    if (document.body.getAttribute('data-chat-initialized') === 'true') return;
+    document.body.setAttribute('data-chat-initialized', 'true');
+
     animateCounter('project-count', 42, 2000);
     animateCounter('client-count', 28, 2000);
     animateCounter('algorithm-count', 15, 2000);
 
     // Initialize chat messages container and input globally using class selectors
+    // We re-select here to ensure these variables are populated before initChatSection uses them
     chatMessagesContainer = document.querySelector('.ai-messages');
     chatInput = document.querySelector('.ai-input');
 
     if (!chatMessagesContainer) {
-        console.error("CRITICAL: Chat messages container element with class '.ai-messages' not found. Chat functionality will be limited.");
-    }
-    if (!chatInput) {
-        console.error("CRITICAL: Chat input element with class '.ai-input' not found. Chat functionality will be limited.");
+        console.error("CRITICAL: Chat messages container element with class '.ai-messages' not found.");
     }
 
-    if (!chatInput) {
-        console.error("CRITICAL: Chat input element with class '.ai-input' not found. Chat functionality will be limited.");
-    }
-
+    // Initialize Chat
     initChatSection();
-    initChatSection();
-    // initChatToggle(); // Floating widget toggle no longer used
-    // checkBackendConnection(); - Removed to hide unused icon
-
-    // Check connection every 30 seconds - Removed
-    // setInterval(updateConnectionStatus, 30000);
 });
