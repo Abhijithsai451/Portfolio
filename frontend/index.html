@@ -1,76 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Scientist Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div id="particles-js"></div>
-    
+
     <div class="container">
         <header>
             <div class="logo">
-                <i class="fas fa-brain"></i>
-                <span>Abhijith Sai</span>
+                <i class="fas fa-cube"></i>
+                <span>ABHIJITH SAI</span>
             </div>
             <nav>
                 <ul>
-                    <li><a href="/index.html">Home</a></li>
-                    <li><a href="/projects.html">Projects</a></li>
-                    <li><a href="/about.html">About</a></li>
-                    <li><a href="/blog.html">Blog</a></li>
-                    <li><a href="/contact.html">Contact</a></li>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="contact.html">Contact</a></li>
                 </ul>
             </nav>
         </header>
-        
+
         <section class="hero">
             <p class="tagline">Transforming Data into Insights</p>
             <h1 class="typewriter">Mathematician & Data Scientist</h1>
             <p class="title">Bridging Theory with Practical Solutions</p>
             <p class="description">
-                I bridge advanced mathematical models with machine learning to solve complex problems and extract meaningful patterns from data, turning raw information into actionable intelligence.
+                I bridge advanced mathematical models with machine learning to solve complex problems and extract
+                meaningful patterns from data, turning raw information into actionable intelligence.
             </p>
-            
+
             <div class="cta-buttons">
-                <a href="/projects.html" class="btn btn-primary">View My Work</a>
-                <a href="/contact.html" class="btn btn-secondary">Contact Me</a>
+                <a href="projects.html" class="btn btn-primary">View My Work</a>
+                <a href="contact.html" class="btn btn-secondary">Contact Me</a>
             </div>
-            
-            <!-- AI Assistant Section - Integrated in content -->
-            <div class="ai-assistant-section">
-                <div class="ai-header">
-                    <div class="ai-title">
-                        <i class="fas fa-robot"></i>
-                        <span>Ask Me Anything About Abhijith Sai</span>
+
+            <section class="ai-chat-section">
+                <div class="chat-interface">
+                    <div class="chat-header-static">
+                        <h2><i class="fas fa-wand-magic-sparkles"></i> Ask My AI</h2>
+                        <p>I can answer questions about Abhijith's resume, projects, and skills.</p>
                     </div>
-                    <button class="toggle-btn">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                </div>
-                <div class="ai-content">
-                    <div class="ai-messages">
-                        <div class="message ai-message">
-                            <div class="message-avatar">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <div class="message-content">
-                                <p>Hello! I'm an AI assistant powered by Ollama. I can help you with the questions related to Abhijith Sai?</p>
+
+                    <div class="chat-box">
+                        <div class="ai-messages">
+                            <div class="message ai-message">
+                                <div class="message-avatar">
+                                    <i class="fas fa-sparkles"></i>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hi there! 👋 I'm ready to help. Try asking "What is his experience with PySpark?"
+                                        or
+                                        "Tell me about his machine learning projects."</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="ai-input-container">
-                        <input type="text" class="ai-input" placeholder="Ask a question about data science..." id="ollama-input">
-                        <button class="ai-send-btn" id="ollama-send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+
+                        <div class="ai-input-container">
+                            <input type="text" class="ai-input" placeholder="Ask a question about my experience..."
+                                id="ollama-input">
+                            <button class="ai-send-btn" id="ollama-send">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
+            </section>
+
+
+
             <div class="stats">
                 <div class="stat">
                     <div class="stat-number" id="project-count">0</div>
@@ -85,7 +96,7 @@
                     <div class="stat-label">Algorithms</div>
                 </div>
             </div>
-            
+
             <div class="skills">
                 <div class="skill-card">
                     <i class="fas fa-chart-line"></i>
@@ -93,12 +104,12 @@
                     <p>Python, R, SQL</p>
                 </div>
                 <div class="skill-card">
-                    <i class="fas fa-robot"></i>
+                    <i class="fas fa-network-wired"></i>
                     <h3>Machine Learning</h3>
                     <p>TensorFlow, PyTorch</p>
                 </div>
                 <div class="skill-card">
-                    <i class="fas fa-calculator"></i>
+                    <i class="fas fa-infinity"></i>
                     <h3>Mathematics</h3>
                     <p>Statistics, Calculus</p>
                 </div>
@@ -109,13 +120,16 @@
                 </div>
             </div>
         </section>
-        
+
+
+
         <footer>
             <p>© 2023 Data Scientist Portfolio | Bridging Math and Machine Learning</p>
         </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="/js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
+
 </html>
