@@ -151,7 +151,7 @@ function addMessage(text, isUser = false) {
 
     const avatar = document.createElement('div');
     avatar.classList.add('message-avatar');
-    avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-sparkles"></i>';
+    avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<img src="images/as_logo.png" alt="AS">';
 
     const content = document.createElement('div');
     content.classList.add('message-content');
@@ -174,7 +174,7 @@ function showTypingIndicator() {
     thinkingIndicator.classList.add('thinking');
     thinkingIndicator.innerHTML = `
         <div class="message-avatar">
-            <i class="fas fa-sparkles"></i>
+            <img src="images/as_logo.png" alt="AS">
         </div>
         <div class="message-content">
             <div class="thinking-dots">
