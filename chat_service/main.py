@@ -34,7 +34,7 @@ app.add_middleware(
 )
 allowed_hosts_list = os.getenv("ALLOWED_HOSTS", "*").split(",")
 logger.info(f"Configured ALLOWED_HOSTS for TrustedHostMiddleware: {allowed_hosts_list}")
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=os.getenv("ALLOWED_HOSTS", "*").split(","))
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
