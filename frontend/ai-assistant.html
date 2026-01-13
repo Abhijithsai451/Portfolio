@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Data Scientist Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="ai-assistant-page">
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <span>ABHIJITH SAI</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="ai-assistant.html" class="active">AI Assistant</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="about.html">About</a></li>
+
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <h1 class="typewriter">AI Assistant</h1>
+            <p class="description">
+                Interact with my AI agent to learn more about my background, skills, and project experience.
+            </p>
+
+            <section class="ai-chat-section">
+                <div class="chat-interface">
+                    <div class="chat-header-static">
+                        <div class="header-content-wrapper">
+                            <div class="header-title">
+                                <h2><i class="fas fa-wand-magic-sparkles"></i> Ask My AI</h2>
+                                <p>Interactive Assistant</p>
+                            </div>
+                            <div class="mode-toggle-container">
+                                <input type="checkbox" id="voice-toggle" style="display: none;">
+                                <div class="mode-options">
+                                    <div class="mode-option active" id="mode-text">
+                                        <i class="fas fa-font"></i>
+                                        <span>Text</span>
+                                    </div>
+                                    <div class="mode-option" id="mode-voice">
+                                        <i class="fas fa-microphone-lines"></i>
+                                        <span>Voice</span>
+                                    </div>
+                                    <div class="mode-glider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-box">
+                        <div class="ai-messages">
+                            <div class="message ai-message">
+                                <div class="message-avatar">
+                                    <img src="images/as_logo.png" alt="AS">
+                                </div>
+                                <div class="message-content">
+                                    <p>Hi there! 👋 I'm ready to help. Try asking "What is his experience with PySpark?"
+                                        or
+                                        "Tell me about his machine learning projects."</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ai-input-container">
+                            <input type="text" class="ai-input" placeholder="Ask a question about my experience..."
+                                id="ollama-input">
+                            <button class="ai-send-btn" id="ollama-send">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button class="ai-mic-btn" id="voice-mic" style="display: none;">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <footer>
+            <p>© 2026 Data Scientist Portfolio | Bridging Math and Machine Learning</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

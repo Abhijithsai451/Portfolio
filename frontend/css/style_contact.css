@@ -16,6 +16,8 @@
 .page-title p {
     font-size: 1.2rem;
     color: #ccc;
+    overflow-y: hidden;
+    /* Prevent body scrolling generally, let specific pages override */
     max-width: 600px;
     margin: 0 auto;
 }
@@ -25,6 +27,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
     margin-bottom: 4rem;
+    align-items: flex-start;
 }
 
 .contact-info {
@@ -41,8 +44,7 @@
 }
 
 .contact-info p {
-    line-height: 1.6;
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     color: #e0e0e0;
 }
 
@@ -176,11 +178,10 @@ textarea.form-control {
 }
 
 footer {
-    text-align: center;
-    padding: 2rem;
-    margin-top: 4rem;
-    color: #ccc;
-    font-size: 0.9rem;
+    color: #cbd5e1;
+    font-size: 0.8rem;
+    padding: 1rem;
+    margin-top: 1rem;
 }
 
 @media (max-width: 768px) {

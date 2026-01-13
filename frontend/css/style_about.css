@@ -2,7 +2,7 @@
 
 .page-title {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .page-title h1 {
@@ -23,8 +23,8 @@
 .about-content {
     display: grid;
     grid-template-columns: 1fr 2fr;
-    gap: 3rem;
-    margin-bottom: 4rem;
+    gap: 2rem;
+    margin-bottom: 2rem;
 }
 
 .profile-image {
@@ -86,7 +86,7 @@
 }
 
 .timeline {
-    margin: 4rem 0;
+    margin: 2rem 0;
 }
 
 .timeline-title {
@@ -98,22 +98,47 @@
 
 .timeline-item {
     display: flex;
-    margin-bottom: 3rem;
+    margin-bottom: 0;
+    padding-bottom: 3rem;
+    /* Use padding for spacing to allow line to continue */
+    align-items: flex-start;
     position: relative;
+    /* KEY FIX: Restrict absolute line to this item */
+}
+
+/* Make sure the last item doesn't have extra padding but line stops? 
+   Actually, continuous line usually fades out or stops at the last dot.
+   Since we have no dots, we just let it run. */
+.timeline-item:last-child {
+    padding-bottom: 0;
 }
 
 .timeline-item::before {
     content: '';
     position: absolute;
-    left: 30px;
+    left: 179px;
+    /* Positioned clearly between date and content */
     top: 0;
     bottom: 0;
     width: 2px;
+    background: #2e3440;
+    /* Dark base */
     background: linear-gradient(to bottom, #00c9ff, #92fe9d);
+    z-index: 1;
+}
+
+.timeline-item:last-child::before {
+    /* Stop the line at the top of the last item content roughly? 
+       Or just let it be. Let's make it display none if we want it to stop, 
+       but that breaks the "continuous" feel. 
+       Let's keep it but maybe fade it out. */
+    background: linear-gradient(to bottom, #00c9ff, transparent);
 }
 
 .timeline-date {
-    min-width: 120px;
+    width: 150px;
+    /* Fixed width */
+    flex-shrink: 0;
     padding-right: 2rem;
     text-align: right;
     font-weight: 600;
@@ -121,16 +146,26 @@
 }
 
 .timeline-content {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-left: 2rem;
     flex: 1;
-    position: relative;
+    margin-left: 3rem;
+    /* Clear gap from the line */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
 }
 
-.timeline-content::before {
+.timeline-content:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 201, 255, 0.3);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Removed bullet point as requested */
+/* .timeline-content::before {
     content: '';
     position: absolute;
     left: -10px;
@@ -139,7 +174,7 @@
     height: 20px;
     background: #00c9ff;
     border-radius: 50%;
-}
+} */
 
 .timeline-content h3 {
     font-size: 1.3rem;
@@ -159,7 +194,7 @@
 }
 
 .skills-section {
-    margin: 4rem 0;
+    margin: 2rem 0;
 }
 
 .skills-title {
