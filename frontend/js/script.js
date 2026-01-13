@@ -139,6 +139,13 @@ window.addEventListener('load', checkScroll);
 // --- Global Chat Variables and Helper Functions ---
 let chatMessagesContainer;
 let chatInput;
+let isVoiceMode = false;
+let isRecording = false;
+let recognition;
+let synth;
+let voiceMicBtn;
+let chatSendBtn;
+let voiceToggle;
 
 // Add message to chat display
 function addMessage(text, isUser = false) {
@@ -196,6 +203,94 @@ function hideTypingIndicator(indicatorElement) {
     }
 }
 
+// --- Voice Mode Logic ---
+function initVoiceMode() {
+    // Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            isRecording = true;
+            if (voiceMicBtn) voiceMicBtn.classList.add('recording');
+            if (chatInput) chatInput.placeholder = "Listening...";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+
+            if (chatInput) chatInput.value = transcript;
+
+            if (event.results[0].isFinal) {
+                stopRecording();
+                setTimeout(() => {
+                    handleSendMessage(transcript);
+                }, 600);
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+        };
+
+        recognition.onend = () => {
+            stopRecording();
+        };
+    }
+
+    // Speech Synthesis
+    if ('speechSynthesis' in window) {
+        synth = window.speechSynthesis;
+    }
+}
+
+function startRecording() {
+    if (recognition && !isRecording) {
+        try {
+            recognition.start();
+        } catch (e) {
+            console.error("Failed to start recognition:", e);
+        }
+    }
+}
+
+function stopRecording() {
+    if (recognition && isRecording) {
+        recognition.stop();
+        isRecording = false;
+        if (voiceMicBtn) voiceMicBtn.classList.remove('recording');
+        if (chatInput) chatInput.placeholder = "Ask a question about my experience...";
+    }
+}
+
+function speak(text) {
+    if (synth && isVoiceMode) {
+        // Cancel any ongoing speech
+        synth.cancel();
+
+        // Remove markdown or special characters for cleaner speech
+        const cleanText = text.replace(/[#*`_]/g, '');
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        // Optional: select a nice voice
+        const voices = synth.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Female'));
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        synth.speak(utterance);
+    }
+}
+
 // API configuration - Update for production
 const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
@@ -238,11 +333,16 @@ async function handleSampleQuestion(question, btn) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({ message: question })
+            body: JSON.stringify({message: question})
         });
 
         hideTypingIndicator(typingIndicator);
         addMessage(data.response, false); // AI response
+
+        // Speak response if voice mode is enabled
+        if (isVoiceMode) {
+            speak(data.response);
+        }
 
     } catch (error) {
         hideTypingIndicator(typingIndicator);
@@ -272,11 +372,16 @@ async function handleSendMessage(message) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({message: message})
         });
 
         hideTypingIndicator(typingIndicator);
         addMessage(data.response, false); // AI response
+
+        // Speak response if voice mode is enabled
+        if (isVoiceMode) {
+            speak(data.response);
+        }
 
     } catch (error) {
         hideTypingIndicator(typingIndicator);
@@ -323,15 +428,61 @@ let isChatInitialized = false;
 function initChatSection() {
     if (isChatInitialized) return;
 
-    const chatSendBtn = document.querySelector('.ai-send-btn'); // Using class selector
+    chatSendBtn = document.querySelector('.ai-send-btn');
+    voiceMicBtn = document.getElementById('voice-mic');
+    voiceToggle = document.getElementById('voice-toggle');
 
     if (!chatInput) {
         console.error("Chat input element with class '.ai-input' not found. Cannot initialize chat section fully.");
         return;
     }
-    if (!chatSendBtn) {
-        console.error("Chat send button element with class '.ai-send-btn' not found. Cannot initialize chat section fully.");
-        return;
+
+    // Initialize Voice Mode
+    initVoiceMode();
+
+    // Mode Toggle Logic
+    if (voiceToggle) {
+        const modeOptions = document.querySelectorAll('.mode-option');
+
+        modeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const isVoice = option.id === 'mode-voice';
+                voiceToggle.checked = isVoice;
+                voiceToggle.dispatchEvent(new Event('change'));
+            });
+        });
+
+        voiceToggle.addEventListener('change', () => {
+            isVoiceMode = voiceToggle.checked;
+
+            // Update UI active states
+            if (isVoiceMode) {
+                document.getElementById('mode-voice').classList.add('active');
+                document.getElementById('mode-text').classList.remove('active');
+                chatSendBtn.style.display = 'none';
+                voiceMicBtn.style.display = 'flex';
+                chatInput.placeholder = "Click the mic to speak...";
+            } else {
+                document.getElementById('mode-text').classList.add('active');
+                document.getElementById('mode-voice').classList.remove('active');
+                chatSendBtn.style.display = 'flex';
+                voiceMicBtn.style.display = 'none';
+                chatInput.placeholder = "Ask a question about my experience...";
+                stopRecording();
+                if (synth) synth.cancel();
+            }
+        });
+    }
+
+    // Mic Button Logic
+    if (voiceMicBtn) {
+        voiceMicBtn.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
     }
 
     // Sample question buttons
@@ -344,12 +495,14 @@ function initChatSection() {
     });
 
     // Send message on button click
-    chatSendBtn.addEventListener('click', () => {
-        const message = chatInput.value.trim();
-        if (message) {
-            handleSendMessage(message);
-        }
-    });
+    if (chatSendBtn) {
+        chatSendBtn.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                handleSendMessage(message);
+            }
+        });
+    }
 
     // Send message on Enter key (use keydown to prevent default form submission if applicable)
     chatInput.addEventListener('keydown', (e) => {
