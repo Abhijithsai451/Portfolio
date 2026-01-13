@@ -63,6 +63,10 @@ if USE_VECTOR_DB:
             persist_directory="./chroma_db",
             anonymized_telemetry=False
         ))
+        try:
+            chroma_client.delete_collection("portfolio_knowledge")
+        except Exception:
+            pass
         collection = chroma_client.get_or_create_collection("portfolio_knowledge")
         logger.info("ChromaDB vector database initialized")
     except Exception as e:
@@ -71,7 +75,7 @@ if USE_VECTOR_DB:
 # Initialize sentence transformer for local embeddings
 local_embedder = None
 try:
-    local_embedder = SentenceTransformer('paraphrase-MiniLM-L3-v2', cache_folder='./.cache/torch/sentence_transformers')
+    local_embedder = SentenceTransformer('all-mpnet-base-v2', cache_folder='./.cache/torch/sentence_transformers')
     logger.info("Local embedding model loaded")
 except Exception as e:
     logger.warning(f"Failed to load local embedding model: {e}. Ensure model files are in volume or downloaded.")

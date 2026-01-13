@@ -8,9 +8,8 @@
     --glass-blur: blur(12px);
     --neon-blue: #00c9ff;
     --neon-green: #92fe9d;
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --bg-dark: #0f172a;
+    overflow-y: auto;
+    /* Default to auto, override for specific pages */
 }
 
 * {
@@ -36,11 +35,27 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
     /* Animated Gradient Background */
     background: radial-gradient(circle at top left, rgba(0, 201, 255, 0.15), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(146, 254, 157, 0.1), transparent 40%),
-    #0f172a;
+        radial-gradient(circle at bottom right, rgba(146, 254, 157, 0.1), transparent 40%),
+        #0f172a;
+}
+
+body.home-page {
+    /* Allow scrolling on home page too for consistency */
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body.ai-assistant-page,
+body.contact-page {
+    overflow: hidden;
+    /* CRITICAL: No scrollbar on these single pages */
+    height: 100vh;
 }
 
 #particles-js {
@@ -55,23 +70,107 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem 2rem;
     position: relative;
     z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 5rem;
+    padding-bottom: 0;
+    /* justify-content: space-between;  Removed to allow natural flow */
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+    /* Restore scrolling for general pages */
+}
+
+/* Specific adjustment for AI Assistant page to be single page */
+.ai-assistant-page .container {
+    padding-top: 5rem;
+    height: 100vh;
+    overflow: hidden;
+    padding-bottom: 0;
+    display: flex;
+    /* IMPORTANT for flex-grow to work properly inside */
+    flex-direction: column;
+}
+
+.ai-assistant-page footer {
+    padding: 0.5rem 0;
+    /* Minimized footer padding */
+    margin-top: 0;
+}
+
+/* Similar adjustment for Contact page */
+.contact-page .container {
+    padding-top: 5rem;
+    height: 100vh;
+    overflow: hidden;
+    padding-bottom: 0;
+    justify-content: space-between;
+}
+
+.ai-assistant-page .main-content,
+.contact-page .main-content {
+    justify-content: center;
+    overflow: hidden;
+    /* Ensure content doesn't trigger scroll */
+}
+
+.ai-assistant-page .main-content {
+    justify-content: center;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.main-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    min-height: 0;
+}
+
+/* Custom Scrollbar for main content */
+.main-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main-scroll-area::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.main-scroll-area::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.main-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* =========================================
    3. NAVIGATION & HEADER
    ========================================= */
 header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 0;
-    margin-bottom: 4rem;
+    display: block;
+    /* Logo is separate now */
+    padding: 0;
+    margin-bottom: 0;
 }
 
+/* Position Logo independently */
 .logo {
+    position: fixed;
+    top: 1.5rem;
+    left: 2rem;
+    z-index: 1001;
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -94,15 +193,21 @@ nav ul {
     display: flex;
     list-style: none;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 0.5rem;
+    background: rgba(13, 17, 23, 0.8);
+    padding: 0.4rem;
     border-radius: 100px;
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
+    backdrop-filter: blur(12px);
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
 }
 
 nav a {
-    color: var(--text-secondary);
+    color: #fff;
+    /* Default text color is White */
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
@@ -114,10 +219,15 @@ nav a {
 
 nav a:hover,
 nav a.active {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    color: #0f172a;
+    /* Dark text for contrast on green */
+    font-weight: 700;
+    background: #4ade80;
+    /* Bright Green fallback */
+    background: linear-gradient(to bottom, #00c9ff, #92fe9d);
+    z-index: 1;
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
 }
 
 /* =========================================
@@ -128,11 +238,38 @@ nav a.active {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 4rem 0;
+    padding: 1rem 0;
+}
+
+/* AI Page Specifics to separate Heading and Window */
+.ai-assistant-page .hero {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Hero takes all available space */
+    padding: 0;
+    min-height: 0;
+    /* Critical for nested flex scrolling */
+}
+
+.ai-assistant-page .tagline,
+.ai-assistant-page h1,
+.ai-assistant-page .description {
+    flex-shrink: 0;
+    /* These should not shrink/move */
+}
+
+.ai-assistant-page .ai-chat-section {
+    flex: 1;
+    /* This takes specifically allocated space */
+    min-height: 0;
+    /* allows flex shrinkage if needed */
+    display: flex;
+    flex-direction: column;
 }
 
 .tagline {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     color: var(--neon-blue);
     margin-bottom: 1.5rem;
     text-transform: uppercase;
@@ -147,10 +284,10 @@ nav a.active {
 }
 
 h1 {
-    font-size: 5rem;
-    margin-bottom: 1rem;
-    line-height: 1.1;
+    font-size: 4rem;
+    line-height: 1.2;
     font-weight: 700;
+    margin-bottom: 1rem;
     background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -159,27 +296,38 @@ h1 {
 }
 
 .title {
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
-    color: var(--text-secondary);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #00c9ff;
     font-weight: 300;
     animation: fadeInUp 0.8s ease-out 0.4s backwards;
 }
 
 .description {
     max-width: 700px;
-    font-size: 1.1rem;
-    line-height: 1.8;
-    margin-bottom: 3rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
     color: #94a3b8;
     animation: fadeInUp 0.8s ease-out 0.6s backwards;
 }
 
+.home-page .description {
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
+    max-width: 800px;
+}
+
 .cta-buttons {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
     animation: fadeInUp 0.8s ease-out 0.8s backwards;
+}
+
+.home-page .cta-buttons {
+    margin-bottom: 2rem;
+    gap: 2rem;
 }
 
 .btn {
@@ -238,29 +386,37 @@ h1 {
    ========================================= */
 .ai-chat-section {
     width: 100%;
-    max-width: 900px;
+    max-width: 760px;
     perspective: 1000px;
-    margin: 2rem auto 5rem;
+    margin: 1rem auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .chat-interface {
-    background: rgba(15, 23, 42, 0.7);
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(13, 17, 23, 0.85);
+    border-radius: 16px;
+    border: 1px solid rgba(48, 54, 61, 0.5);
     backdrop-filter: blur(20px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 650px;
-    transform-style: preserve-3d;
+    flex: 1;
     transition: transform 0.3s ease;
+    flex: 1;
+    height: 100%;
+    /* Fill the parent section completely */
+    max-height: none;
+    /* remove artificial limit to allow flex to dictate size */
 }
 
 .chat-header-static {
-    padding: 1.2rem 1.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem 1.5rem;
+    background: rgba(22, 27, 34, 0.95);
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
     flex-shrink: 0;
 }
 
@@ -292,7 +448,8 @@ h1 {
 
 .header-title p {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: #fff;
+    /* Changed from variable to white */
 }
 
 .mode-toggle-container {
@@ -319,7 +476,8 @@ h1 {
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #fff !important;
+    /* Forces White Text ALWAYS */
     transition: all 0.3s ease;
 }
 
@@ -332,11 +490,12 @@ h1 {
 }
 
 .mode-option.active {
-    color: #0f172a;
+    color: #fff !important;
+    /* Force White Text always */
 }
 
 .mode-option.active:hover {
-    color: #0f172a;
+    color: #fff !important;
 }
 
 .mode-glider {
@@ -350,7 +509,7 @@ h1 {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-#voice-toggle:checked ~ .mode-options .mode-glider {
+#voice-toggle:checked~.mode-options .mode-glider {
     transform: translateX(100%);
 }
 
@@ -358,7 +517,7 @@ h1 {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: rgba(0, 0, 0, 0.2);
+    background: #0d1117;
     min-height: 0;
     /* CRITICAL: Allows flex child to overflow/scroll properly */
     overflow: hidden;
@@ -421,13 +580,14 @@ h1 {
 }
 
 .message-content {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1rem 1.4rem;
-    border-radius: 0 18px 18px 18px;
+    background: #161b22;
+    padding: 1.2rem 1.6rem;
+    border-radius: 0 20px 20px 20px;
     font-size: 0.95rem;
     line-height: 1.6;
     color: #e2e8f0;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .user-message {
@@ -436,10 +596,11 @@ h1 {
 }
 
 .user-message .message-content {
-    background: rgba(0, 201, 255, 0.15);
-    border-color: rgba(0, 201, 255, 0.3);
+    background: linear-gradient(135deg, rgba(0, 201, 255, 0.2), rgba(0, 201, 255, 0.05));
+    border-color: rgba(0, 201, 255, 0.2);
     color: #fff;
-    border-radius: 18px 0 18px 18px;
+    border-radius: 20px 0 20px 20px;
+    box-shadow: 0 4px 15px rgba(0, 201, 255, 0.1);
 }
 
 .user-message .message-avatar {
@@ -448,21 +609,22 @@ h1 {
 }
 
 .ai-input-container {
-    padding: 1.5rem;
-    background: rgba(10, 15, 30, 0.6);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.2rem;
+    background: #161b22;
+    border-top: 1px solid #30363d;
     display: flex;
-    gap: 1rem;
+    gap: 0.8rem;
     align-items: center;
     flex-shrink: 0;
+    position: relative;
     /* CRITICAL: Prevents input from being squashed */
 }
 
 .ai-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1rem 1.5rem;
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 1.2rem 1.8rem;
     border-radius: 50px;
     color: #fff;
     font-size: 0.95rem;
@@ -521,10 +683,12 @@ h1 {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.7);
     }
+
     70% {
         transform: scale(1.1);
         box-shadow: 0 0 0 15px rgba(255, 65, 108, 0);
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(255, 65, 108, 0);
@@ -536,9 +700,44 @@ h1 {
    ========================================= */
 .stats {
     display: flex;
-    gap: 6rem;
-    margin: 6rem 0;
+    gap: 4rem;
+    margin: 2rem 0;
     justify-content: center;
+}
+
+.home-page .stats {
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    padding: 1rem 2rem;
+    margin: 0 0 1rem 0;
+    width: 100%;
+    justify-content: center;
+    gap: 2rem;
+    box-shadow: none;
+    animation: fadeInUp 0.8s ease-out 1s backwards;
+}
+
+.home-page .stat {
+    opacity: 1;
+    transform: none;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.home-page .stat:hover {
+    transform: translateY(-5px);
+}
+
+.home-page .stat-number {
+    font-size: 2.2rem;
+    margin-bottom: 0.1rem;
+}
+
+.home-page .stat-label {
+    font-size: 0.75rem;
 }
 
 .stat {
@@ -547,13 +746,22 @@ h1 {
 }
 
 .stat-number {
-    font-size: 4rem;
+    font-size: 3rem;
     font-weight: 700;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
     filter: drop-shadow(0 0 20px rgba(0, 201, 255, 0.2));
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    /* visible light grey */
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .skills {
@@ -628,14 +836,65 @@ h1 {
     }
 }
 
+footer {
+    width: 100%;
+    margin-top: auto;
+    text-align: center;
+    padding: 1.5rem 0;
+    background: transparent;
+    display: none;
+    /* Hide globally */
+}
+
+.home-page footer,
+.contact-page footer,
+.projects-page footer,
+.about-page footer,
+.ai-assistant-page footer {
+    display: block;
+    /* Show on home and contact pages */
+}
+
+.contact-page footer {
+    margin-top: 0;
+    padding: 1rem;
+    border-top: none;
+}
+
 @media (max-width: 768px) {
     h1 {
-        font-size: 3rem;
+        font-size: 2.5rem;
+    }
+
+    .home-page .container {
+        height: auto;
+        min-height: 100vh;
+        padding: 1rem;
+    }
+
+    body.home-page {
+        height: auto;
+        overflow-y: auto;
     }
 
     .stats {
         flex-direction: column;
-        gap: 3rem;
+        gap: 2rem;
+    }
+
+    .home-page .stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 1.2rem;
+        gap: 1rem;
+    }
+
+    .home-page .stat {
+        flex: 1 1 80px;
+    }
+
+    .home-page .stat-number {
+        font-size: 1.6rem;
     }
 
     .chat-interface {
@@ -644,12 +903,19 @@ h1 {
 
     header {
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
 
     nav ul {
         flex-wrap: wrap;
         justify-content: center;
+        padding: 0.3rem;
+    }
+
+    nav a {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -714,7 +980,15 @@ footer {
     margin-top: 6rem;
     padding: 3rem 0;
     text-align: center;
-    color: var(--text-secondary);
+    color: #cbd5e1;
+    /* Visible light grey */
+}
+
+.home-page footer {
+    margin-top: 0;
+    padding: 0.5rem 0 1rem 0;
+    border-top: none;
+    font-size: 0.85rem;
 }
 
 /* Image Avatar Styling */
@@ -805,6 +1079,7 @@ footer {
     }
 
     .mode-options {
-        width: 180px; /* Slightly wider on mobile for easier tapping */
+        width: 180px;
+        /* Slightly wider on mobile for easier tapping */
     }
 }

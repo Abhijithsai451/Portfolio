@@ -89,8 +89,10 @@ particlesJS('particles-js', {
 
 // Counter animation for stats
 function animateCounter(elementId, finalValue, duration) {
-    let startTime = null;
     const element = document.getElementById(elementId);
+    if (!element) return;
+
+    let startTime = null;
     const initialValue = 0;
 
     function updateCounter(timestamp) {
@@ -127,8 +129,14 @@ function checkScroll() {
 
 // Initialize element styles for animation
 document.querySelectorAll('.skill-card, .stat').forEach(element => {
-    element.style.opacity = 0;
-    element.style.transform = 'translateY(20px)';
+    // If it's the home page, we want stats to be visible immediately
+    if (document.body.classList.contains('home-page') && element.classList.contains('stat')) {
+        element.style.opacity = 1;
+        element.style.transform = 'translateY(0)';
+    } else {
+        element.style.opacity = 0;
+        element.style.transform = 'translateY(20px)';
+    }
     element.style.transition = 'all 0.5s ease';
 });
 
@@ -292,9 +300,7 @@ function speak(text) {
 }
 
 // API configuration - Update for production
-const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:8000'
-    : 'https://your-backend-production-url.railway.app'; // <--- IMPORTANT: Update this URL for your production environment
+const API_BASE_URL = 'http://localhost:8000'; // Direct local connection for testing
 
 // Enhanced error handling for API calls
 async function makeApiRequest(endpoint, options = {}) {
@@ -333,7 +339,7 @@ async function handleSampleQuestion(question, btn) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({message: question})
+            body: JSON.stringify({ message: question })
         });
 
         hideTypingIndicator(typingIndicator);
@@ -372,7 +378,7 @@ async function handleSendMessage(message) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({message: message})
+            body: JSON.stringify({ message: message })
         });
 
         hideTypingIndicator(typingIndicator);
@@ -576,14 +582,11 @@ document.addEventListener('DOMContentLoaded', function () {
     animateCounter('algorithm-count', 15, 2000);
 
     // Initialize chat messages container and input globally using class selectors
-    // We re-select here to ensure these variables are populated before initChatSection uses them
     chatMessagesContainer = document.querySelector('.ai-messages');
     chatInput = document.querySelector('.ai-input');
 
-    if (!chatMessagesContainer) {
-        console.error("CRITICAL: Chat messages container element with class '.ai-messages' not found.");
+    // Initialize Chat if elements exist
+    if (chatMessagesContainer && chatInput) {
+        initChatSection();
     }
-
-    // Initialize Chat
-    initChatSection();
 });
