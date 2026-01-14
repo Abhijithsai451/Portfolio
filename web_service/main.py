@@ -63,6 +63,7 @@ CORE_CHAT_PROXY_COUNT = Counter('core_chat_proxy_requests_total', 'Total chat re
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="User message to process")
     session_id: Optional[str] = Field(None, description="Optional session ID for conversation history")
+    is_voice: bool = Field(False, description="Whether the request is from voice mode")
 
 
 class ChatResponse(BaseModel):
