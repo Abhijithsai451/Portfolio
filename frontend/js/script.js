@@ -278,39 +278,34 @@ function stopRecording() {
     }
 }
 
-function speak(text) {
-    if (synth && isVoiceMode) {
-        // Cancel any ongoing speech
-        synth.cancel();
+// Play high-quality audio from base64 string
+function playAudio(base64Audio) {
+    if (!base64Audio) return;
 
-        // Remove markdown or special characters for cleaner speech
-        const cleanText = text.replace(/[#*`_]/g, '');
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-
-        // Optional: select a nice voice
-        // Select American English voice
-        const voices = synth.getVoices();
-        const americanVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Samantha')));
-        const fallbackVoice = voices.find(v => v.lang === 'en-US');
-
-        if (americanVoice) {
-            utterance.voice = americanVoice;
-        } else if (fallbackVoice) {
-            utterance.voice = fallbackVoice;
+    try {
+        // Convert base64 to blob
+        const byteCharacters = atob(base64Audio);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'audio/mpeg' });
 
-        // Ensure language is set
-        utterance.lang = 'en-US';
+        // Create URL and play
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play().catch(e => console.error("Audio playback failed:", e));
 
-        synth.speak(utterance);
+        // Cleanup URL after playing
+        audio.onended = () => URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error playing audio:", error);
     }
 }
 
 // API configuration - Update for production
-const API_BASE_URL = 'http://localhost:8000'; // Direct local connection for testing
+const API_BASE_URL = window.location.origin; // Dynamically use the current origin
 
 // Enhanced error handling for API calls
 async function makeApiRequest(endpoint, options = {}) {
@@ -358,9 +353,9 @@ async function handleSampleQuestion(question, btn) {
         hideTypingIndicator(typingIndicator);
         addMessage(data.response, false); // AI response
 
-        // Speak response if voice mode is enabled
-        if (isVoiceMode) {
-            speak(data.response);
+        // Play high-quality audio if returned
+        if (data.audio) {
+            playAudio(data.audio);
         }
 
     } catch (error) {
@@ -400,9 +395,9 @@ async function handleSendMessage(message) {
         hideTypingIndicator(typingIndicator);
         addMessage(data.response, false); // AI response
 
-        // Speak response if voice mode is enabled
-        if (isVoiceMode) {
-            speak(data.response);
+        // Play high-quality audio if returned
+        if (data.audio) {
+            playAudio(data.audio);
         }
 
     } catch (error) {

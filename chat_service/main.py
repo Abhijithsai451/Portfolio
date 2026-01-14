@@ -1,9 +1,11 @@
-from slowapi import _rate_limit_exceeded_handler
-from sentence_transformers import SentenceTransformer
 from utils.imports_file import *
+import openai
 import chromadb
 from chromadb.config import Settings
 import numpy as np
+import base64
+import glob
+from pathlib import Path
 
 # Load environment variables
 load_dotenv()
@@ -43,7 +45,11 @@ CHAT_MODEL = os.getenv("CHAT_MODEL", "llama3.1")
 KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_FILE", "knowledge_base.txt")
 USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"  
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # 5 minutes
+CACHE_TTL = int(os.getenv("CACHE_TTL", "300")) 
+KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
+
+# Initialize OpenAI client
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Initializing Redis for caching (can be shared with core service if accessible)
 try:
@@ -72,13 +78,8 @@ if USE_VECTOR_DB:
     except Exception as e:
         logger.error(f"Failed to initialize ChromaDB: {e}")
 
-# Initialize sentence transformer for local embeddings
+# Removed local embedding initialization
 local_embedder = None
-try:
-    local_embedder = SentenceTransformer('all-mpnet-base-v2', cache_folder='./.cache/torch/sentence_transformers')
-    logger.info("Local embedding model loaded")
-except Exception as e:
-    logger.warning(f"Failed to load local embedding model: {e}. Ensure model files are in volume or downloaded.")
 
 
 # Pydantic models for chat
@@ -92,19 +93,29 @@ class ChatResponse(BaseModel):
     response: str
     session_id: Optional[str] = None
     processing_time: float
+    audio: Optional[str] = None # Base64 encoded audio string
 
 
-# Load knowledge base from file
-def load_knowledge_base(file_path: str) -> str:
-    try:
-        # Assuming knowledge_base.txt is in the chat_service directory or its parent
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read().strip()
-            logger.info(f"Loaded knowledge base from {file_path} ({len(content)} characters)")
-            return content
-    except Exception as e:
-        logger.error(f"Error loading knowledge base: {e}")
-        raise HTTPException(status_code=500, detail="Failed to load knowledge base")
+# Load knowledge base from multiple files
+def load_all_knowledge(directory: str) -> str:
+    combined_content = []
+    data_path = Path(directory)
+    if not data_path.is_absolute():
+        data_path = Path(__file__).parent / directory
+    
+    files = list(data_path.glob("*.txt")) + list(data_path.glob("*.md"))
+    logger.info(f"Scanning directory {data_path} for knowledge files. Found: {len(files)}")
+    
+    for file_path in files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read().strip()
+                combined_content.append(f"--- SOURCE: {file_path.name} ---\n{content}")
+                logger.info(f"Loaded {file_path.name}")
+        except Exception as e:
+            logger.error(f"Error loading {file_path}: {e}")
+    
+    return "\n\n".join(combined_content)
 
 
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
@@ -133,9 +144,9 @@ def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
 
 
 # Load and chunk knowledge base on startup
-KNOWLEDGE_BASE = load_knowledge_base(KNOWLEDGE_BASE_FILE)
+KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
 knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
-logger.info(f"Knowledge base chunks: {len(knowledge_chunks)}")
+logger.info(f"Total knowledge chunks from all files: {len(knowledge_chunks)}")
 
 # Initialize vector database with knowledge chunks
 if USE_VECTOR_DB and collection:
@@ -178,34 +189,16 @@ def set_cache(key: str, value: Any, ttl: int = CACHE_TTL):
 
 
 async def generate_embedding(text: str) -> List[float]:
-    """Generate text embedding with fallback strategies"""
-    monitor.increment_embedding_requests(source='ollama')
-
-    # Try Ollama first
+    # Use OpenAI Embeddings
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                    f"{OLLAMA_BASE_URL}/api/embeddings",
-                    json={"model": EMBEDDING_MODEL, "prompt": text},
-                    timeout=30
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("embedding", [])
+        response = client.embeddings.create(
+            input=text,
+            model="text-embedding-3-small"
+        )
+        return response.data[0].embedding
     except Exception as e:
-        logger.warning(f"Ollama embedding failed: {e}")
-
-    # Fallback to local model
-    monitor.increment_embedding_requests(source='local')
-    if local_embedder:
-        try:
-            embedding = local_embedder.encode([text])[0].tolist()
-            return embedding
-        except Exception as e:
-            logger.error(f"Local embedding failed: {e}")
-
-    # Final fallback: simple TF-IDF like approach
-    return [len(text) / 1000.0]  # Simple fallback
+        logger.error(f"OpenAI embedding failed: {e}")
+        return []
 
 
 async def find_relevant_context(query: str, top_k: int = 3) -> str:
@@ -253,33 +246,34 @@ async def find_relevant_context(query: str, top_k: int = 3) -> str:
         return "\n\n".join(knowledge_chunks[:2])
 
 
-async def chat_with_ollama(messages: List[dict]) -> str:
-    """Send chat request to Ollama with retry logic"""
-    for attempt in range(3):
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                        f"{OLLAMA_BASE_URL}/api/chat",
-                        json={
-                            "model": CHAT_MODEL,
-                            "messages": messages,
-                            "stream": False,
-                            "options": {"temperature": 0.3, "top_p": 0.9}
-                        },
-                        timeout=60
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data.get("message", {}).get("content", "No response generated")
-                    elif attempt == 2:
-                        raise HTTPException(status_code=502, detail="Ollama service unavailable")
-        except Exception as e:
-            if attempt == 2:
-                logger.error(f"Final Ollama attempt failed: {e}")
-                raise HTTPException(status_code=503, detail="AI service temporarily unavailable")
-            await asyncio.sleep(1 * (attempt + 1))
+async def generate_audio(text: str) -> Optional[str]:
+    """Generate high-quality audio using OpenAI TTS and return as base64"""
+    try:
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy", # Natural, clean American voice
+            input=text
+        )
+        # Convert to base64
+        return base64.b64encode(response.content).decode('utf-8')
+    except Exception as e:
+        logger.error(f"TTS Generation failed: {e}")
+        return None
 
-    return "Sorry, I'm experiencing technical difficulties. Please try again later."
+
+async def chat_with_openai(messages: List[dict]) -> str:
+    """Send chat request to OpenAI"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", # Cost effective and fast
+            messages=messages,
+            temperature=0.3,
+            max_tokens=400 # Allow enough for 5 sentences
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"OpenAI chat failed: {e}")
+        return "Sorry, I'm experiencing technical difficulties connecting to my AI brain. Please try again later."
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -295,29 +289,37 @@ async def chat_endpoint(chat_request: ChatRequest):
         {context}
 
         INSTRUCTIONS:
-        - Be professional, friendly, and concise
-        - Use ONLY the information provided
-        - Admit when you don't know something
-        - Focus on skills, projects, and experience
+        - Be professional, friendly, and concise.
+        - Use ONLY the information provided.
+        - Admit when you don't know something.
+        - STRICT LENGTH LIMIT: Use a maximum of 4-5 sentences.
+        - Focus on skills, projects, and experience.
         """
 
         if chat_request.is_voice:
-            system_prompt += "\n- KEEP RESPONSE SHORT: Maximum 2-3 sentences. converting to speech."
+            system_prompt += "\n- VOICE MODE: Be extremely concise, keep it to 3 sentences if possible."
 
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": chat_request.message}
         ]
 
-        response = await chat_with_ollama(messages)
+        text_response = await chat_with_openai(messages)
+        
+        # Generate audio if voice requested
+        audio_b64 = None
+        if chat_request.is_voice:
+            audio_b64 = await generate_audio(text_response)
+
         processing_time = time.time() - start_time
 
         monitor.increment_chat_requests(status="success")
         monitor.set_response_time(processing_time)
         return ChatResponse(
-            response=response,
+            response=text_response,
             session_id=chat_request.session_id,
-            processing_time=processing_time
+            processing_time=processing_time,
+            audio=audio_b64
         )
 
     except Exception as e:
