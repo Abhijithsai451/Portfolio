@@ -2,19 +2,20 @@ from slowapi import _rate_limit_exceeded_handler
 
 from utils.imports_file import *
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 # Load environment variables
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s -  %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-logger.info("Starting Core API Service...")
 
 # Initializing Monitor
 monitor = Monitor()
-app = FastAPI(title="Portfolio AI Agent (Core)",
-              description="Core API for Portfolio Website",
+app = FastAPI(title="Portfolio AI Agent",
+              description="Portfolio Website & AI Assistant",
               version="1.0.0",
-              docs_url="/api/docs",
-              redoc_url="/api/redoc"
+              docs_url="/api/docs"
               )
 
 # Rate Limiting
@@ -70,6 +71,7 @@ class ChatResponse(BaseModel):
     response: str
     session_id: Optional[str] = None
     processing_time: float
+    audio: Optional[str] = None # Base64 encoded audio string
 
 
 class HealthResponse(BaseModel):
@@ -150,7 +152,8 @@ async def chat_endpoint_proxy(request: Request, chat_request: ChatRequest):
                 return ChatResponse(
                     response=chat_response_data.get("response", "No response from AI service."),
                     session_id=chat_response_data.get("session_id"),
-                    processing_time=processing_time
+                    processing_time=processing_time,
+                    audio=chat_response_data.get("audio")
                 )
     except aiohttp.ClientResponseError as e:
         processing_time = time.time() - start_time
@@ -181,6 +184,35 @@ async def internal_error_handler(request: Request, exc: HTTPException):
         content={"detail": "Internal server error"}
     )
 
+
+# --- Static File Serving ---
+# Mount the frontend directory to serve all static files
+frontend_path = Path(__file__).parent.parent / "frontend"
+app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
+@app.get("/")
+async def read_index():
+    return FileResponse(frontend_path / "index.html")
+
+@app.get("/{page_name}.html")
+async def read_html(page_name: str):
+    file_path = frontend_path / f"{page_name}.html"
+    if file_path.exists():
+        return FileResponse(file_path)
+    return JSONResponse(status_code=404, content={"detail": "Page not found"})
+
+# Serve images, css, js specifically if needed or just use root
+@app.get("/css/{file_path:path}")
+async def serve_css(file_path: str):
+    return FileResponse(frontend_path / "css" / file_path)
+
+@app.get("/js/{file_path:path}")
+async def serve_js(file_path: str):
+    return FileResponse(frontend_path / "js" / file_path)
+
+@app.get("/images/{file_path:path}")
+async def serve_images(file_path: str):
+    return FileResponse(frontend_path / "images" / file_path)
 
 # Store startup time
 app.start_time = time.time()
