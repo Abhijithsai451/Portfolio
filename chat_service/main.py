@@ -85,6 +85,7 @@ except Exception as e:
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="User message to process")
     session_id: Optional[str] = Field(None, description="Optional session ID for conversation history")
+    is_voice: bool = Field(False, description="Whether the request is from voice mode")
 
 
 class ChatResponse(BaseModel):
@@ -297,9 +298,11 @@ async def chat_endpoint(chat_request: ChatRequest):
         - Be professional, friendly, and concise
         - Use ONLY the information provided
         - Admit when you don't know something
-        - Keep responses under 3-4 sentences
         - Focus on skills, projects, and experience
         """
+
+        if chat_request.is_voice:
+            system_prompt += "\n- KEEP RESPONSE SHORT: Maximum 2-3 sentences. converting to speech."
 
         messages = [
             {"role": "system", "content": system_prompt},

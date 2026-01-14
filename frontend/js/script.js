@@ -291,9 +291,19 @@ function speak(text) {
         utterance.pitch = 1.0;
 
         // Optional: select a nice voice
+        // Select American English voice
         const voices = synth.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Female'));
-        if (preferredVoice) utterance.voice = preferredVoice;
+        const americanVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Samantha')));
+        const fallbackVoice = voices.find(v => v.lang === 'en-US');
+
+        if (americanVoice) {
+            utterance.voice = americanVoice;
+        } else if (fallbackVoice) {
+            utterance.voice = fallbackVoice;
+        }
+
+        // Ensure language is set
+        utterance.lang = 'en-US';
 
         synth.speak(utterance);
     }
@@ -339,7 +349,10 @@ async function handleSampleQuestion(question, btn) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({ message: question })
+            body: JSON.stringify({
+                message: question,
+                is_voice: isVoiceMode // Pass the current mode
+            })
         });
 
         hideTypingIndicator(typingIndicator);
@@ -378,7 +391,10 @@ async function handleSendMessage(message) {
     try {
         const data = await makeApiRequest('/api/chat', {
             method: 'POST',
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({
+                message: message,
+                is_voice: isVoiceMode // Pass the current mode
+            })
         });
 
         hideTypingIndicator(typingIndicator);
