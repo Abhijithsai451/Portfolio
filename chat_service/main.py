@@ -13,7 +13,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logger.info("Starting Chat AI Service...")
 
-monitor = Monitor()  # This will only monitor chat service specific metrics
+monitor = Monitor()  # To monitor Chat service Stats
 
 app = FastAPI(title="Portfolio AI Chat Service",
               description="AI powered chat agent for portfolio website with RAG Capabilities",
@@ -29,7 +29,7 @@ app.add_middleware(
                    "http://127.0.0.1:3000",
                    "https://your-netlify-site.netlify.app",
                    "https://*.netlify.app",
-                   os.getenv("CORE_SERVICE_URL", "http://localhost:8000")],  # Allow core service
+                   os.getenv("CORE_SERVICE_URL", "http://localhost:8000")],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,11 +39,11 @@ logger.info(f"Configured ALLOWED_HOSTS for TrustedHostMiddleware: {allowed_hosts
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    logger.warning("OPENAI_API_KEY not found in environment variables. Chat will fail.")
-
-USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
+CHAT_MODEL = os.getenv("CHAT_MODEL", "llama3.1")
+KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_FILE", "knowledge_base.txt")
+USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"  
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300")) 
 KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
