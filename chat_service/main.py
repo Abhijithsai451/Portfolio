@@ -49,6 +49,7 @@ CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
 KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
 
 # Initialize OpenAI client
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Initializing Redis for caching (can be shared with core service if accessible)
@@ -334,7 +335,7 @@ async def refresh_knowledge():
     """Force reload of knowledge base and re-index vector DB"""
     global KNOWLEDGE_BASE, knowledge_chunks
     try:
-        KNOWLEDGE_BASE = load_knowledge_base(KNOWLEDGE_BASE_FILE)
+        KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
         knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
 
         if USE_VECTOR_DB and collection:
