@@ -588,9 +588,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.body.getAttribute('data-chat-initialized') === 'true') return;
     document.body.setAttribute('data-chat-initialized', 'true');
 
-    animateCounter('project-count', 42, 2000);
-    animateCounter('client-count', 28, 2000);
-    animateCounter('algorithm-count', 15, 2000);
+    animateCounter('project-count', 12, 2000);
+    animateCounter('publication-count', 25, 2000);
+    animateCounter('algorithm-count', 18, 2000);
 
     // Initialize chat messages container and input globally using class selectors
     chatMessagesContainer = document.querySelector('.ai-messages');

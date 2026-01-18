@@ -3,50 +3,50 @@ Mathematician & Data Scientist
 Tagline: Bridging Theory with Practical Solutions
 
 Summary
-Passionate Mathematician and Data Scientist dedicated to bridging advanced mathematical models with machine learning to solve complex problems. Specialized in transforming raw data into actionable intelligence through predictive analytics, natural language processing, and computer vision. Expertise in building end-to-end ML pipelines, deep learning architectures, and scalable big data solutions.
+Passionate Mathematician and Data Scientist dedicated to bridging advanced mathematical models with machine learning to solve complex problems. Specialized in transforming raw data into actionable intelligence through predictive analytics, natural language processing, and computer vision. Expertise in building end-to-end ML pipelines, deep learning architectures, and scalable autonomous agents.
 
 Skills
-- Programming: Python, R, SQL, Scala, JavaScript
+- Programming: Python (Scientific Stack), Scala, SQL, Shell Scripting
 - Machine Learning: TensorFlow, PyTorch, Scikit-learn, Keras
-- Mathematics: Statistics, Calculus, Linear Algebra, Probability Theory
-- Big Data: Hadoop, Apache Spark
-- Visualization: Tableau, D3.js, Matplotlib, Seaborn
-- Web Tech: HTML5, CSS3, React
+- Agentic AI: Model Context Protocol (MCP), Multi-Agent Systems, RAG
+- Mathematics: Partial Differential Equations (PDEs), Deep Galerkin Methods, Statistics, Linear Algebra
+- Big Data: Hadoop, Apache Spark, distributed processing
+- Visualization: Matplotlib, Seaborn, Tableau
 
 Projects
 
-1. Predictive Sales Analytics
-   - Description: Developed a machine learning model to predict sales trends with 92% accuracy using time series analysis and regression techniques.
-   - Tech Stack: Python, TensorFlow, Time Series
-   - Outcomes: Enabled data-driven inventory management and revenue forecasting.
+1. Inference Wound Healing PINNs
+   - Description: Research and implementation of Physics-Informed Neural Networks (PINNs) to infer biological parameters and solve complex models for wound healing processes.
+   - Tech Stack: PINNs, Mathematics, PyTorch, Biotech
+   - Outcomes: Successfully bridged deep learning with differential equations for biological simulations.
 
-2. Sentiment Analysis Engine
-   - Description: Built an NLP pipeline for sentiment analysis of customer reviews using BERT transformers, achieving 95% classification accuracy.
-   - Tech Stack: NLP, BERT, PyTorch
-   - Outcomes: provided real-time insights into customer satisfaction and product feedback.
+2. Physics-Induced Neural Networks
+   - Description: Focused on deep learning architectures that incorporate physical laws and constraints as a fundamental guiding principle for training and inference.
+   - Tech Stack: DL, Physics, Python, Scientific Computing
+   - Outcomes: Developed robust models that respect physical conservation laws.
 
-3. Image Classification System
-   - Description: Created a deep learning model (CNN) for medical image classification to assist in early disease detection with 98% precision.
-   - Tech Stack: Computer Vision, CNN, Keras
-   - Outcomes: demonstrated high efficacy in automated diagnostic assistance.
+3. Futuristic AI Portfolio
+   - Description: The codebase for this professional dark-themed portfolio, featuring a RAG-based AI assistant and automated project synchronization.
+   - Tech Stack: FullStack, RAG, AI Assistant, HTML/CSS/JS
+   - Outcomes: Created a high-end showcase for professional expertise with interactive AI components.
 
-4. Interactive Data Dashboard
-   - Description: Designed an interactive dashboard for real-time data visualization with filtering capabilities and predictive insights.
-   - Tech Stack: Tableau, D3.js, React
-   - Outcomes: Improved stakeholder decision-making speed by presenting complex data intuitively.
+4. Real-time Multi-Agent Threat Detection
+   - Description: A sophisticated surveillance system utilizing multi-agent swarms. Combines Vision (CNN/Transformers) and Audio (Spectrogram) with LLM reasoning to detect security threats in real-time.
+   - Tech Stack: Multi-Agent Systems, Computer Vision, Security, LLMs
+   - Outcomes: Achieved millisecond response times for identifying network and physical threats.
 
-5. Personalized Recommendation Engine
-   - Description: Implemented a collaborative filtering algorithm for product recommendations that increased user engagement by 35%.
-   - Tech Stack: Machine Learning, Spark, Scala
-   - Outcomes: Significantly boosted cross-selling opportunities and user retention.
+5. Deep Galerkin Methods Implementation
+   - Description: Professional implementation of Deep Galerkin Methods (DGM) for solving high-dimensional partial differential equations (PDEs), with applications to the Black-Scholes equation.
+   - Tech Stack: Mathematics, PDEs, Finance, Neural Solvers
+   - Outcomes: Solved high-dimensional problems that are computationally intractable for traditional numerical methods.
 
-6. Big Data Processing Pipeline
-   - Description: Built a distributed data processing system using Hadoop and Spark to analyze terabytes of social media data.
-   - Tech Stack: Hadoop, Spark, Big Data
-   - Outcomes: Processed large-scale datasets efficiently for downstream analytics.
+6. Audio Analysis MCP Toolkit
+   - Description: An MCP-driven toolkit enabling transcription and high-level insight extraction (sentiment analysis, speaker tags, topic detection) from audio files.
+   - Tech Stack: MCP, Assembly AI, Streamlit, Claude Desktop
+   - Outcomes: Enabled "chat with audio" capabilities through the Model Context Protocol.
 
 Experience
-(Inferred) Data Scientist with a strong foundation in mathematical theory and its practical application in AI.
+Expert in bridging theoretical mathematics with state-of-the-art AI applications, ranging from scientific computing to autonomous agent frameworks.
 
 Education
-(Inferred) Background in Mathematics and Computer Science.
+Advanced background in Mathematics and Computer Science, specializing in numerical analysis and deep learning.

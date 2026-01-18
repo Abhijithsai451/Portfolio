@@ -185,6 +185,7 @@ header {
     font-size: 1.8rem;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 10px rgba(0, 201, 255, 0.3));
 }
@@ -290,6 +291,7 @@ h1 {
     margin-bottom: 1rem;
     background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -2px;
     animation: fadeInUp 0.8s ease-out 0.2s backwards;
@@ -328,6 +330,35 @@ h1 {
 .home-page .cta-buttons {
     margin-bottom: 2rem;
     gap: 2rem;
+}
+
+.social-links-hero {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    animation: fadeInUp 0.8s ease-out 1s backwards;
+}
+
+.social-links-hero a {
+    color: #94a3b8;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.social-links-hero a:hover {
+    color: #00c9ff;
+    transform: translateY(-3px);
+    background: rgba(0, 201, 255, 0.1);
+    border-color: rgba(0, 201, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 201, 255, 0.2);
 }
 
 .btn {
@@ -794,6 +825,7 @@ h1 {
     margin-bottom: 1.5rem;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
