@@ -7,5 +7,9 @@ pydantic==2.5.0
 slowapi==0.1.8
 redis==5.0.1
 chromadb==0.4.22
-openai==1.6.0
+openai>=1.12.0
+httpx>=0.27.0
 python-multipart
+aiohttp>=3.9.0
+prometheus-fastapi-instrumentator
+prometheus-client

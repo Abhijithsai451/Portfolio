@@ -9,11 +9,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-
-      ALLOWED_HOSTS: "localhost,127.0.0.1,192.168.65.1,localhost:8000,127.0.0.1:8000"
-      REDIS_URL: "redis://redis:6379" # Connects to the 'redis' service defined below
+      ALLOWED_HOSTS: "*"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-devpassword123}@redis:6379"
       CHAT_SERVICE_URL: "http://chat_service:8001"
-    # Docker Compose can load environment variables from a .env file at the project root
     env_file:
       - .env
     volumes:
@@ -22,25 +20,21 @@ services:
       - chat_service
       - redis
 
-  # Chat Service (AI/ML logic, ChromaDB, Ollama interaction)
+  # Chat Service (AI/ML logic, ChromaDB)
   chat_service:
     build:
       context: .
       dockerfile: chat_service/Dockerfile
     environment:
-      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
-      EMBEDDING_MODEL: "nomic-embed-text"
-      CHAT_MODEL: "llama3.1"
-      KNOWLEDGE_BASE_FILE: "chat_service/knowledge_base.txt"
       USE_VECTOR_DB: "true"
-      REDIS_URL: "redis://redis:6379"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-devpassword123}@redis:6379"
       CACHE_TTL: "300"
       ALLOWED_HOSTS: "*"
+      KNOWLEDGE_DIR: "chat_service/data"
     env_file:
       - .env
     volumes:
       - chat_service_chroma_db_data:/app/chroma_db
-      - chat_service_st_cache:/app/.cache/torch/sentence_transformers
       - .:/app
     depends_on:
       - redis
@@ -53,9 +47,9 @@ services:
       - "8002:8001"
     volumes:
       - redis_data:/data # Persist Redis data
-    command: redis-stack-server /etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+    environment:
+      - REDIS_ARGS=--requirepass ${REDIS_PASSWORD:-devpassword123}
 
 volumes:
   chat_service_chroma_db_data:
-  chat_service_st_cache:
   redis_data:

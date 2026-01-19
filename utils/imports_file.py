@@ -1,3 +1,4 @@
+from pathlib import Path
 import asyncio
 import json
 import logging
@@ -12,7 +13,7 @@ import prometheus_client
 import redis
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -26,5 +27,4 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from fastapi.responses import PlainTextResponse
-import aiohttp  # For communicating with the chat service
 from utils.monitor import Monitor
