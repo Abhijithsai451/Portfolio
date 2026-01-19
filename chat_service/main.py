@@ -66,10 +66,7 @@ chroma_client = None
 collection = None
 if USE_VECTOR_DB:
     try:
-        chroma_client = chromadb.Client(Settings(
-            persist_directory="./chroma_db",
-            anonymized_telemetry=False
-        ))
+        chroma_client = chromadb.PersistentClient(path="./chroma_db")
         try:
             chroma_client.delete_collection("portfolio_knowledge")
         except Exception:
@@ -144,29 +141,50 @@ def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-# Load and chunk knowledge base on startup
-KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
-knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
-logger.info(f"Total knowledge chunks from all files: {len(knowledge_chunks)}")
+# Global knowledge state
+KNOWLEDGE_BASE = ""
+knowledge_chunks = []
 
-# Initialize vector database with knowledge chunks
-if USE_VECTOR_DB and collection:
-    try:
-        if collection.count() == 0:
-            embeddings = []
-            if local_embedder:
-                embeddings = local_embedder.encode(knowledge_chunks).tolist()
+@app.on_event("startup")
+async def startup_event():
+    global KNOWLEDGE_BASE, knowledge_chunks
+    logger.info("Initializing knowledge base...")
+    KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
+    knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
+    logger.info(f"Total knowledge chunks from all files: {len(knowledge_chunks)}")
 
-            collection.add(
-                documents=knowledge_chunks,
-                embeddings=embeddings if embeddings else None,
-                ids=[f"chunk_{i}" for i in range(len(knowledge_chunks))]
-            )
-            logger.info(f"Added {len(knowledge_chunks)} chunks to vector database")
-        else:
-            logger.info(f"ChromaDB collection already contains {collection.count()} chunks. Skipping initial load.")
-    except Exception as e:
-        logger.error(f"Failed to initialize vector database with chunks: {e}")
+    # Initialize vector database with knowledge chunks
+    if USE_VECTOR_DB and collection:
+        try:
+            if collection.count() == 0:
+                logger.info(f"Generating OpenAI embeddings for {len(knowledge_chunks)} chunks...")
+                embeddings = []
+                valid_chunks = []
+                valid_ids = []
+                
+                for i, chunk in enumerate(knowledge_chunks):
+                    try:
+                        emb = await generate_embedding(chunk)
+                        if emb:
+                            embeddings.append(emb)
+                            valid_chunks.append(chunk)
+                            valid_ids.append(f"chunk_{i}")
+                    except Exception as e:
+                        logger.error(f"Failed to generate embedding for chunk {i}: {e}")
+
+                if embeddings:
+                    collection.add(
+                        documents=valid_chunks,
+                        embeddings=embeddings,
+                        ids=valid_ids
+                    )
+                    logger.info(f"Successfully added {len(embeddings)} chunks with OpenAI embeddings to vector database")
+                else:
+                    logger.error("No valid embeddings generated. Vector database remains empty.")
+            else:
+                logger.info(f"ChromaDB collection already contains {collection.count()} chunks. Skipping initial load.")
+        except Exception as e:
+            logger.error(f"Failed to initialize vector database with chunks: {e}")
 
 
 # Cache functions
@@ -277,6 +295,16 @@ async def chat_with_openai(messages: List[dict]) -> str:
         return "Sorry, I'm experiencing technical difficulties connecting to my AI brain. Please try again later."
 
 
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "OK",
+        "message": "Chat AI Service healthy",
+        "version": "1.0.0",
+        "uptime": time.time() - app.start_time
+    }
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
     start_time = time.time()
@@ -340,20 +368,31 @@ async def refresh_knowledge():
 
         if USE_VECTOR_DB and collection:
             # Clear existing data and re-add
-            collection.delete(ids=[f"chunk_{i}" for i in range(collection.count())])
+            try:
+                # Get all IDs to delete
+                all_data = collection.get()
+                if all_data['ids']:
+                    collection.delete(ids=all_data['ids'])
+            except Exception as e:
+                logger.warning(f"Error clearing collection: {e}")
+
+            logger.info(f"Generating OpenAI embeddings for {len(knowledge_chunks)} chunks...")
             embeddings = []
-            if local_embedder:
-                embeddings = local_embedder.encode(knowledge_chunks).tolist()
+            for chunk in knowledge_chunks:
+                emb = await generate_embedding(chunk)
+                embeddings.append(emb)
+
             collection.add(
                 documents=knowledge_chunks,
-                embeddings=embeddings if embeddings else None,
+                embeddings=embeddings,
                 ids=[f"chunk_{i}" for i in range(len(knowledge_chunks))]
             )
             logger.info(f"Re-indexed {len(knowledge_chunks)} chunks into vector database")
 
         return {"status": "success", "message": f"Reloaded {len(knowledge_chunks)} chunks"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Refresh failed: {e}")
+        logger.error(f"Refresh failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Refresh failed: {str(e)}")
 
 
 # Error handlers
