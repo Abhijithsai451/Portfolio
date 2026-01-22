@@ -155,6 +155,13 @@ let voiceMicBtn;
 let chatSendBtn;
 let voiceToggle;
 
+// New Voice UI Elements
+let chatBox;
+let voiceInterface;
+let voiceActionBtn;
+let voiceVisualizer;
+let voiceStatus;
+
 // Add message to chat display
 function addMessage(text, isUser = false) {
     if (!chatMessagesContainer) {
@@ -225,6 +232,11 @@ function initVoiceMode() {
             isRecording = true;
             if (voiceMicBtn) voiceMicBtn.classList.add('recording');
             if (chatInput) chatInput.placeholder = "Listening...";
+
+            // New Voice UI Updates
+            if (voiceActionBtn) voiceActionBtn.classList.add('recording');
+            if (voiceStatus) voiceStatus.textContent = "Listening...";
+            if (voiceVisualizer) voiceVisualizer.classList.add('active');
         };
 
         recognition.onresult = (event) => {
@@ -246,6 +258,7 @@ function initVoiceMode() {
         recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             stopRecording();
+            if (voiceStatus) voiceStatus.textContent = "Error. Tap to try again.";
         };
 
         recognition.onend = () => {
@@ -275,6 +288,11 @@ function stopRecording() {
         isRecording = false;
         if (voiceMicBtn) voiceMicBtn.classList.remove('recording');
         if (chatInput) chatInput.placeholder = "Ask a question about my experience...";
+
+        // New Voice UI Updates
+        if (voiceActionBtn) voiceActionBtn.classList.remove('recording');
+        if (voiceStatus) voiceStatus.textContent = "Processing...";
+        if (voiceVisualizer) voiceVisualizer.classList.remove('active');
     }
 }
 
@@ -295,10 +313,19 @@ function playAudio(base64Audio) {
         // Create URL and play
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
+
+        // Visualizer Animation for Playback
+        if (voiceVisualizer) voiceVisualizer.classList.add('active');
+        if (voiceStatus) voiceStatus.textContent = "Speaking...";
+
         audio.play().catch(e => console.error("Audio playback failed:", e));
 
         // Cleanup URL after playing
-        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            if (voiceVisualizer) voiceVisualizer.classList.remove('active');
+            if (voiceStatus) voiceStatus.textContent = "Tap to speak";
+        };
     } catch (error) {
         console.error("Error playing audio:", error);
     }
@@ -446,8 +473,15 @@ function initChatSection() {
     if (isChatInitialized) return;
 
     chatSendBtn = document.querySelector('.ai-send-btn');
-    voiceMicBtn = document.getElementById('voice-mic');
+    voiceMicBtn = document.getElementById('voice-mic-main');
     voiceToggle = document.getElementById('voice-toggle');
+
+    // New Voice Elements
+    chatBox = document.querySelector('.chat-box');
+    voiceInterface = document.getElementById('voice-interface');
+    voiceActionBtn = document.getElementById('voice-action-btn');
+    voiceVisualizer = document.getElementById('voice-visualizer');
+    voiceStatus = document.getElementById('voice-status');
 
     if (!chatInput) {
         console.error("Chat input element with class '.ai-input' not found. Cannot initialize chat section fully.");
@@ -472,28 +506,42 @@ function initChatSection() {
         voiceToggle.addEventListener('change', () => {
             isVoiceMode = voiceToggle.checked;
 
-            // Update UI active states
             if (isVoiceMode) {
                 document.getElementById('mode-voice').classList.add('active');
                 document.getElementById('mode-text').classList.remove('active');
-                chatSendBtn.style.display = 'none';
-                voiceMicBtn.style.display = 'flex';
-                chatInput.placeholder = "Click the mic to speak...";
+
+                // Switch Views
+                if (chatBox) chatBox.style.display = 'none';
+                if (voiceInterface) voiceInterface.style.display = 'flex';
+
             } else {
                 document.getElementById('mode-text').classList.add('active');
                 document.getElementById('mode-voice').classList.remove('active');
-                chatSendBtn.style.display = 'flex';
-                voiceMicBtn.style.display = 'none';
-                chatInput.placeholder = "Ask a question about my experience...";
+
+                // Switch Views
+                if (chatBox) chatBox.style.display = 'flex';
+                if (voiceInterface) voiceInterface.style.display = 'none';
+
                 stopRecording();
                 if (synth) synth.cancel();
             }
         });
     }
 
-    // Mic Button Logic
+    // Original Mic Button Logic (Small)
     if (voiceMicBtn) {
         voiceMicBtn.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+    }
+
+    // New Large Mic Button Logic
+    if (voiceActionBtn) {
+        voiceActionBtn.addEventListener('click', () => {
             if (isRecording) {
                 stopRecording();
             } else {
