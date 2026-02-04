@@ -1,651 +1,206 @@
 particlesJS('particles-js', {
     particles: {
-        number: {
-            value: 80,
-            density: {
-                enable: true,
-                value_area: 800
-            }
-        },
-        color: {
-            value: '#00c9ff'
-        },
-        shape: {
-            type: 'circle',
-            stroke: {
-                width: 0,
-                color: '#000000'
-            }
-        },
-        opacity: {
-            value: 0.5,
-            random: true,
-            anim: {
-                enable: true,
-                speed: 1,
-                opacity_min: 0.1,
-                sync: false
-            }
-        },
-        size: {
-            value: 3,
-            random: true,
-            anim: {
-                enable: true,
-                speed: 2,
-                size_min: 0.1,
-                sync: false
-            }
-        },
-        line_linked: {
-            enable: true,
-            distance: 150,
-            color: '#00c9ff',
-            opacity: 0.4,
-            width: 1
-        },
-        move: {
-            enable: true,
-            speed: 2,
-            direction: 'none',
-            random: true,
-            straight: false,
-            out_mode: 'out',
-            bounce: false,
-            attract: {
-                enable: false,
-                rotateX: 600,
-                rotateY: 1200
-            }
-        }
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: '#00c9ff' },
+        shape: { type: 'circle' },
+        opacity: { value: 0.5, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1 } },
+        size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1 } },
+        line_linked: { enable: true, distance: 150, color: '#00c9ff', opacity: 0.4, width: 1 },
+        move: { enable: true, speed: 2, direction: 'none', random: true, out_mode: 'out' }
     },
     interactivity: {
-        detect_on: 'canvas',
-        events: {
-            onhover: {
-                enable: true,
-                mode: 'grab'
-            },
-            onclick: {
-                enable: true,
-                mode: 'push'
-            },
-            resize: true
-        },
-        modes: {
-            grab: {
-                distance: 140,
-                line_linked: {
-                    opacity: 1
-                }
-            },
-            push: {
-                particles_nb: 4
-            }
-        }
+        events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
+        modes: { grab: { distance: 140, line_linked: { opacity: 1 } }, push: { particles_nb: 4 } }
     },
     retina_detect: true
 });
 
-// Counter animation for stats
 function animateCounter(elementId, finalValue, duration) {
     const element = document.getElementById(elementId);
     if (!element) return;
-
-    let startTime = null;
-    const initialValue = 0;
-
-    function updateCounter(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-
-        const currentValue = Math.floor(progress * (finalValue - initialValue) + initialValue);
-        element.textContent = currentValue;
-
-        if (progress < 1) {
-            requestAnimationFrame(updateCounter);
-        } else {
-            element.textContent = finalValue;
-        }
+    let start = null;
+    function step(timestamp) {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        element.textContent = Math.floor(progress * finalValue);
+        if (progress < 1) requestAnimationFrame(step);
+        else element.textContent = finalValue;
     }
-
-    requestAnimationFrame(updateCounter);
+    requestAnimationFrame(step);
 }
 
-// Add scroll animation for elements
 function checkScroll() {
-    const elements = document.querySelectorAll('.skill-card, .stat');
-
-    elements.forEach(element => {
-        const elementPosition = element.getBoundingClientRect().top;
-        const screenPosition = window.innerHeight / 1.3;
-
-        if (elementPosition < screenPosition) {
-            element.style.opacity = 1;
-            element.style.transform = 'translateY(0)';
+    document.querySelectorAll('.skill-card, .stat').forEach(el => {
+        const pos = el.getBoundingClientRect().top;
+        if (pos < window.innerHeight / 1.3) {
+            el.style.opacity = 1;
+            el.style.transform = 'translateY(0)';
         }
     });
 }
 
-// Initialize element styles for animation
-document.querySelectorAll('.skill-card, .stat').forEach(element => {
-    // If it's the home page, we want stats to be visible immediately
-    if (document.body.classList.contains('home-page') && element.classList.contains('stat')) {
-        element.style.opacity = 1;
-        element.style.transform = 'translateY(0)';
+document.querySelectorAll('.skill-card, .stat').forEach(el => {
+    if (document.body.classList.contains('home-page') && el.classList.contains('stat')) {
+        el.style.opacity = 1;
+        el.style.transform = 'translateY(0)';
     } else {
-        element.style.opacity = 0;
-        element.style.transform = 'translateY(20px)';
+        el.style.opacity = 0;
+        el.style.transform = 'translateY(20px)';
     }
-    element.style.transition = 'all 0.5s ease';
+    el.style.transition = 'all 0.5s ease';
 });
 
 window.addEventListener('scroll', checkScroll);
 window.addEventListener('load', checkScroll);
 
+let chatMessagesContainer, chatInput, isVoiceMode = false, isRecording = false, recognition, synth;
+let voiceMicBtn, chatSendBtn, voiceToggle, chatBox, voiceInterface, voiceActionBtn, voiceVisualizer, voiceStatus;
 
-// --- Global Chat Variables and Helper Functions ---
-let chatMessagesContainer;
-let chatInput;
-let isVoiceMode = false;
-let isRecording = false;
-let recognition;
-let synth;
-let voiceMicBtn;
-let chatSendBtn;
-let voiceToggle;
-
-// New Voice UI Elements
-let chatBox;
-let voiceInterface;
-let voiceActionBtn;
-let voiceVisualizer;
-let voiceStatus;
-
-// Add message to chat display
 function addMessage(text, isUser = false) {
-    if (!chatMessagesContainer) {
-        console.error("Chat messages container not found. Make sure element with class '.ai-messages' exists and is initialized.");
-        return;
-    }
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', isUser ? 'user-message' : 'ai-message');
-
-    const avatar = document.createElement('div');
-    avatar.classList.add('message-avatar');
-    avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<img src="images/as_logo.png" alt="AS">';
-
-    const content = document.createElement('div');
-    content.classList.add('message-content');
-    content.innerHTML = `<p>${text}</p>`;
-
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(content);
-
-    chatMessagesContainer.appendChild(messageDiv);
-    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-}
-
-// Show typing indicator
-function showTypingIndicator() {
-    if (!chatMessagesContainer) {
-        console.error("Chat messages container not found for typing indicator. Make sure element with class '.ai-messages' exists and is initialized.");
-        return null;
-    }
-    const thinkingIndicator = document.createElement('div');
-    thinkingIndicator.classList.add('thinking');
-    thinkingIndicator.innerHTML = `
-        <div class="message-avatar">
-            <img src="images/as_logo.png" alt="AS">
-        </div>
-        <div class="message-content">
-            <div class="thinking-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
+    if (!chatMessagesContainer) return;
+    const msg = document.createElement('div');
+    msg.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+    msg.innerHTML = `
+        <div class="message-avatar">${isUser ? '<i class="fas fa-user"></i>' : '<img src="images/as_logo.png" alt="AS">'}</div>
+        <div class="message-content"><p>${text}</p></div>
     `;
-    chatMessagesContainer.appendChild(thinkingIndicator);
+    chatMessagesContainer.appendChild(msg);
     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-    return thinkingIndicator;
 }
 
-// Hide typing indicator
-function hideTypingIndicator(indicatorElement) {
-    if (indicatorElement && chatMessagesContainer && chatMessagesContainer.contains(indicatorElement)) {
-        chatMessagesContainer.removeChild(indicatorElement);
-    }
+function showTyping() {
+    if (!chatMessagesContainer) return null;
+    const div = document.createElement('div');
+    div.className = 'thinking';
+    div.innerHTML = `<div class="message-avatar"><img src="images/as_logo.png" alt="AS"></div>
+                     <div class="message-content"><div class="thinking-dots"><span></span><span></span><span></span></div></div>`;
+    chatMessagesContainer.appendChild(div);
+    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    return div;
 }
 
-// --- Voice Mode Logic ---
-function initVoiceMode() {
-    // Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
+function hideTyping(el) { if (el && chatMessagesContainer) chatMessagesContainer.removeChild(el); }
 
+function initVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+        recognition = new SR();
         recognition.onstart = () => {
             isRecording = true;
             if (voiceMicBtn) voiceMicBtn.classList.add('recording');
-            if (chatInput) chatInput.placeholder = "Listening...";
-
-            // New Voice UI Updates
             if (voiceActionBtn) voiceActionBtn.classList.add('recording');
             if (voiceStatus) voiceStatus.textContent = "Listening...";
             if (voiceVisualizer) voiceVisualizer.classList.add('active');
         };
-
-        recognition.onresult = (event) => {
-            const transcript = Array.from(event.results)
-                .map(result => result[0])
-                .map(result => result.transcript)
-                .join('');
-
-            if (chatInput) chatInput.value = transcript;
-
-            if (event.results[0].isFinal) {
-                stopRecording();
-                setTimeout(() => {
-                    handleSendMessage(transcript);
-                }, 600);
+        recognition.onresult = (e) => {
+            const t = e.results[0][0].transcript;
+            if (chatInput) chatInput.value = t;
+            if (e.results[0].isFinal) {
+                stopRec();
+                setTimeout(() => handleSend(t), 600);
             }
         };
-
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            stopRecording();
-            if (voiceStatus) voiceStatus.textContent = "Error. Tap to try again.";
-        };
-
-        recognition.onend = () => {
-            stopRecording();
-        };
+        recognition.onend = stopRec;
     }
-
-    // Speech Synthesis
-    if ('speechSynthesis' in window) {
-        synth = window.speechSynthesis;
-    }
+    if ('speechSynthesis' in window) synth = window.speechSynthesis;
 }
 
-function startRecording() {
-    if (recognition && !isRecording) {
-        try {
-            recognition.start();
-        } catch (e) {
-            console.error("Failed to start recognition:", e);
-        }
-    }
-}
-
-function stopRecording() {
+function startRec() { if (recognition && !isRecording) recognition.start(); }
+function stopRec() {
     if (recognition && isRecording) {
         recognition.stop();
         isRecording = false;
-        if (voiceMicBtn) voiceMicBtn.classList.remove('recording');
-        if (chatInput) chatInput.placeholder = "Ask a question about my experience...";
-
-        // New Voice UI Updates
-        if (voiceActionBtn) voiceActionBtn.classList.remove('recording');
+        [voiceMicBtn, voiceActionBtn].forEach(b => b?.classList.remove('recording'));
         if (voiceStatus) voiceStatus.textContent = "Processing...";
         if (voiceVisualizer) voiceVisualizer.classList.remove('active');
     }
 }
 
-// Play high-quality audio from base64 string
-function playAudio(base64Audio) {
-    if (!base64Audio) return;
+function playAudio(b64) {
+    if (!b64) return;
+    const blob = new Blob([new Uint8Array(atob(b64).split("").map(c => c.charCodeAt(0)))], { type: 'audio/mpeg' });
+    const audio = new Audio(URL.createObjectURL(blob));
+    if (voiceVisualizer) voiceVisualizer.classList.add('active');
+    if (voiceStatus) voiceStatus.textContent = "Speaking...";
+    audio.play();
+    audio.onended = () => {
+        if (voiceVisualizer) voiceVisualizer.classList.remove('active');
+        if (voiceStatus) voiceStatus.textContent = "Tap to speak";
+    };
+}
 
+const API_BASE = window.location.origin;
+async function apiReq(url, opt = {}) {
+    const res = await fetch(API_BASE + url, { headers: { 'Content-Type': 'application/json' }, ...opt });
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+}
+
+async function handleSend(msg) {
+    if (!msg.trim()) return;
+    addMessage(msg, true);
+    if (chatInput) { chatInput.value = ''; chatInput.focus(); }
+    const loader = showTyping();
     try {
-        // Convert base64 to blob
-        const byteCharacters = atob(base64Audio);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-
-        // Create URL and play
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-
-        // Visualizer Animation for Playback
-        if (voiceVisualizer) voiceVisualizer.classList.add('active');
-        if (voiceStatus) voiceStatus.textContent = "Speaking...";
-
-        audio.play().catch(e => console.error("Audio playback failed:", e));
-
-        // Cleanup URL after playing
-        audio.onended = () => {
-            URL.revokeObjectURL(url);
-            if (voiceVisualizer) voiceVisualizer.classList.remove('active');
-            if (voiceStatus) voiceStatus.textContent = "Tap to speak";
-        };
-    } catch (error) {
-        console.error("Error playing audio:", error);
+        const data = await apiReq('/api/chat', { method: 'POST', body: JSON.stringify({ message: msg, is_voice: isVoiceMode }) });
+        hideTyping(loader);
+        addMessage(data.response);
+        if (data.audio) playAudio(data.audio);
+    } catch (e) {
+        hideTyping(loader);
+        addMessage("Error connecting to assistant.");
     }
 }
 
-// API configuration - Update for production
-const API_BASE_URL = window.location.origin; // Dynamically use the current origin
-
-// Enhanced error handling for API calls
-async function makeApiRequest(endpoint, options = {}) {
-    try {
-        console.log(`Making API request to: ${API_BASE_URL}${endpoint}`);
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        });
-        console.log(`API response status: ${response.status}`);
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-
-// Enhanced sample question handler
-async function handleSampleQuestion(question, btn) {
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'Asking...';
-    btn.style.opacity = '0.7';
-    btn.disabled = true;
-
-    addMessage(question, true); // User message
-
-    const typingIndicator = showTypingIndicator();
-
-    try {
-        const data = await makeApiRequest('/api/chat', {
-            method: 'POST',
-            body: JSON.stringify({
-                message: question,
-                is_voice: isVoiceMode // Pass the current mode
-            })
-        });
-
-        hideTypingIndicator(typingIndicator);
-        addMessage(data.response, false); // AI response
-
-        // Play high-quality audio if returned
-        if (data.audio) {
-            playAudio(data.audio);
-        }
-
-    } catch (error) {
-        hideTypingIndicator(typingIndicator);
-        addMessage("I'm having trouble connecting to my knowledge base. Please try again later.", false); // AI error message
-        console.error('Chat error:', error);
-    } finally {
-        btn.innerHTML = originalText;
-        btn.style.opacity = '1';
-        btn.disabled = false;
-    }
-}
-
-// Enhanced message sending
-async function handleSendMessage(message) {
-    if (!message.trim()) return;
-
-    addMessage(message, true); // User message
-
-    if (chatInput) {
-        chatInput.value = '';
-        chatInput.focus();
-    }
-
-
-    const typingIndicator = showTypingIndicator();
-
-    try {
-        const data = await makeApiRequest('/api/chat', {
-            method: 'POST',
-            body: JSON.stringify({
-                message: message,
-                is_voice: isVoiceMode // Pass the current mode
-            })
-        });
-
-        hideTypingIndicator(typingIndicator);
-        addMessage(data.response, false); // AI response
-
-        // Play high-quality audio if returned
-        if (data.audio) {
-            playAudio(data.audio);
-        }
-
-    } catch (error) {
-        hideTypingIndicator(typingIndicator);
-        addMessage("I'm having trouble connecting right now. Please try again.", false); // AI error message
-        console.error('Send message error:', error);
-    }
-}
-
-// Initialize Chat Window Toggle Logic
-function initChatToggle() {
-    const launcher = document.getElementById('chat-launcher');
-    const chatWindow = document.getElementById('chat-window');
-    const closeBtn = document.getElementById('chat-close');
-
-    if (launcher && chatWindow) {
-        launcher.addEventListener('click', () => {
-            chatWindow.classList.toggle('hidden');
-            const icon = launcher.querySelector('i');
-            if (chatWindow.classList.contains('hidden')) {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-robot');
-            } else {
-                // Focus input when opened
-                const input = document.querySelector('.ai-input');
-                if (input) setTimeout(() => input.focus(), 300);
-            }
-        });
-    }
-
-    if (closeBtn && chatWindow) {
-        closeBtn.addEventListener('click', () => {
-            chatWindow.classList.add('hidden');
-            const launcherIcon = document.getElementById('chat-launcher').querySelector('i');
-            launcherIcon.classList.remove('fa-times');
-            launcherIcon.classList.add('fa-robot');
-        });
-    }
-}
-
-// Flag to prevent multiple initializations
-let isChatInitialized = false;
-
-// Initialize Chat Event Listeners
-function initChatSection() {
-    if (isChatInitialized) return;
+function initChat() {
+    const launcher = document.getElementById('chat-launcher'), win = document.getElementById('chat-window'), close = document.getElementById('chat-close');
+    if (launcher && win) launcher.onclick = () => {
+        win.classList.toggle('hidden');
+        const icon = launcher.querySelector('i');
+        icon.classList.toggle('fa-robot', win.classList.contains('hidden'));
+        icon.classList.toggle('fa-times', !win.classList.contains('hidden'));
+        if (!win.classList.contains('hidden')) setTimeout(() => chatInput?.focus(), 300);
+    };
+    if (close && win) close.onclick = () => win.classList.add('hidden');
 
     chatSendBtn = document.querySelector('.ai-send-btn');
     voiceMicBtn = document.getElementById('voice-mic-main');
     voiceToggle = document.getElementById('voice-toggle');
-
-    // New Voice Elements
     chatBox = document.querySelector('.chat-box');
     voiceInterface = document.getElementById('voice-interface');
     voiceActionBtn = document.getElementById('voice-action-btn');
     voiceVisualizer = document.getElementById('voice-visualizer');
     voiceStatus = document.getElementById('voice-status');
 
-    if (!chatInput) {
-        console.error("Chat input element with class '.ai-input' not found. Cannot initialize chat section fully.");
-        return;
-    }
+    initVoice();
 
-    // Initialize Voice Mode
-    initVoiceMode();
-
-    // Mode Toggle Logic
     if (voiceToggle) {
-        const modeOptions = document.querySelectorAll('.mode-option');
-
-        modeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const isVoice = option.id === 'mode-voice';
-                voiceToggle.checked = isVoice;
-                voiceToggle.dispatchEvent(new Event('change'));
-            });
+        document.querySelectorAll('.mode-option').forEach(opt => {
+            opt.onclick = () => { voiceToggle.checked = opt.id === 'mode-voice'; voiceToggle.dispatchEvent(new Event('change')); };
         });
-
-        voiceToggle.addEventListener('change', () => {
+        voiceToggle.onchange = () => {
             isVoiceMode = voiceToggle.checked;
-
-            if (isVoiceMode) {
-                document.getElementById('mode-voice').classList.add('active');
-                document.getElementById('mode-text').classList.remove('active');
-
-                // Switch Views
-                if (chatBox) chatBox.style.display = 'none';
-                if (voiceInterface) voiceInterface.style.display = 'flex';
-
-            } else {
-                document.getElementById('mode-text').classList.add('active');
-                document.getElementById('mode-voice').classList.remove('active');
-
-                // Switch Views
-                if (chatBox) chatBox.style.display = 'flex';
-                if (voiceInterface) voiceInterface.style.display = 'none';
-
-                stopRecording();
-                if (synth) synth.cancel();
-            }
-        });
+            document.getElementById('mode-voice').classList.toggle('active', isVoiceMode);
+            document.getElementById('mode-text').classList.toggle('active', !isVoiceMode);
+            chatBox.style.display = isVoiceMode ? 'none' : 'flex';
+            voiceInterface.style.display = isVoiceMode ? 'flex' : 'none';
+            if (!isVoiceMode) { stopRec(); synth?.cancel(); }
+        };
     }
 
-    // Original Mic Button Logic (Small)
-    if (voiceMicBtn) {
-        voiceMicBtn.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
-            }
-        });
-    }
-
-    // New Large Mic Button Logic
-    if (voiceActionBtn) {
-        voiceActionBtn.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
-            }
-        });
-    }
-
-    // Sample question buttons
-    const sampleQuestionBtns = document.querySelectorAll('.sample-question-btn');
-    sampleQuestionBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const question = btn.textContent;
-            handleSampleQuestion(question, btn);
-        });
-    });
-
-    // Send message on button click
-    if (chatSendBtn) {
-        chatSendBtn.addEventListener('click', () => {
-            const message = chatInput.value.trim();
-            if (message) {
-                handleSendMessage(message);
-            }
-        });
-    }
-
-    // Send message on Enter key (use keydown to prevent default form submission if applicable)
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent default behavior
-            const message = chatInput.value.trim();
-            if (message) {
-                handleSendMessage(message);
-            }
-        }
-    });
-
-    isChatInitialized = true;
-    console.log("Chat section initialized successfully.");
+    [voiceMicBtn, voiceActionBtn].forEach(b => b && (b.onclick = () => isRecording ? stopRec() : startRec()));
+    document.querySelectorAll('.sample-question-btn').forEach(b => b.onclick = () => handleSend(b.textContent));
+    chatSendBtn && (chatSendBtn.onclick = () => handleSend(chatInput.value));
+    chatInput && (chatInput.onkeydown = (e) => e.key === 'Enter' && handleSend(chatInput.value));
 }
 
-// Add connection status indicator
-function updateConnectionStatus() {
-    const statusIndicator = document.getElementById('connection-status') || createConnectionStatus();
-
-    fetch(`${API_BASE_URL}/api/health`)
-        .then(response => {
-            if (response.ok) {
-                statusIndicator.className = 'connection-status connected';
-                statusIndicator.title = 'AI Agent: Connected';
-            } else {
-                statusIndicator.className = 'connection-status disconnected';
-                statusIndicator.title = 'AI Agent: Disconnected';
-            }
-        })
-        .catch(error => {
-            statusIndicator.className = 'connection-status disconnected';
-            statusIndicator.title = 'AI Agent: Disconnected';
-        });
-}
-
-function createConnectionStatus() {
-    // Disabled to remove unused icon
-    return null;
-}
-
-// Check backend connection on page load - Disabled to remove unused icon
-function checkBackendConnection() {
-    // const statusIndicator = document.getElementById('connection-status') || createConnectionStatus();
-
-    fetch(`${API_BASE_URL}/api/health`)
-        .then(response => {
-            if (response.ok) {
-                // statusIndicator.style.backgroundColor = '#4CAF50';
-                console.log('✅ Backend connection successful');
-            } else {
-                // statusIndicator.style.backgroundColor = '#F44336';
-                console.log('❌ Backend connection failed');
-            }
-        })
-        .catch(error => {
-            // statusIndicator.style.backgroundColor = '#F44336';
-            console.log('❌ Backend connection error:', error);
-        });
-}
-
-// Initialize when the page loads
-// Initialize when the page loads
-document.addEventListener('DOMContentLoaded', function () {
-    // Only run if not already running (though DOMContentLoaded should only fire once per page load)
-    if (document.body.getAttribute('data-chat-initialized') === 'true') return;
-    document.body.setAttribute('data-chat-initialized', 'true');
-
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.body.dataset.chatInit) return;
+    document.body.dataset.chatInit = "true";
     animateCounter('project-count', 12, 2000);
     animateCounter('publication-count', 25, 2000);
     animateCounter('algorithm-count', 18, 2000);
-
-    // Initialize chat messages container and input globally using class selectors
     chatMessagesContainer = document.querySelector('.ai-messages');
     chatInput = document.querySelector('.ai-input');
-
-    // Initialize Chat if elements exist
-    if (chatMessagesContainer && chatInput) {
-        initChatSection();
-    }
+    if (chatMessagesContainer && chatInput) initChat();
 });

@@ -1,16 +1,11 @@
-#!/usr/bin/env python3
-"""
-Utility to manage and update the knowledge base
-"""
-
 import argparse
 
-from backend.main import load_knowledge_base, chunk_text
+from chat_service.main import load_all_knowledge, chunk_text
 
 
 def show_stats():
     """Show knowledge base statistics"""
-    knowledge = load_knowledge_base("knowledge_base.txt")
+    knowledge = load_all_knowledge("data")
     chunks = chunk_text(knowledge)
 
     print("Knowledge Base Statistics:")

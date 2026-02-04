@@ -1,428 +1,168 @@
-from utils.imports_file import *
-import openai
-import chromadb
-from chromadb.config import Settings
-import numpy as np
+import os
+import time
+import logging
+import json
+import re
 import base64
-import glob
 from pathlib import Path
+from typing import List, Optional, Any
+import numpy as np
+import openai
+import redis
+import chromadb
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from pydantic import BaseModel, Field
+from utils.monitor import Monitor
 
-# Load environment variables
 load_dotenv()
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("Starting Chat AI Service...")
 
-monitor = Monitor()  # To monitor Chat service Stats
+monitor = Monitor()
+app = FastAPI(title="Portfolio AI Chat Service", version="1.0.0")
 
-app = FastAPI(title="Portfolio AI Chat Service",
-              description="AI powered chat agent for portfolio website with RAG Capabilities",
-              version="1.0.0",
-              docs_url="/api/docs",
-              redoc_url="/api/redoc"
-              )
-
-# Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000",
-                   "http://127.0.0.1:3000",
-                   "https://your-netlify-site.netlify.app",
-                   "https://*.netlify.app",
-                   os.getenv("CORE_SERVICE_URL", "http://localhost:8000")],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-allowed_hosts_list = os.getenv("ALLOWED_HOSTS", "*").split(",")
-logger.info(f"Configured ALLOWED_HOSTS for TrustedHostMiddleware: {allowed_hosts_list}")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
-# Configuration
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
-CHAT_MODEL = os.getenv("CHAT_MODEL", "llama3.1")
-KNOWLEDGE_BASE_FILE = os.getenv("KNOWLEDGE_BASE_FILE", "knowledge_base.txt")
-USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"  
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-CACHE_TTL = int(os.getenv("CACHE_TTL", "300")) 
-KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
-
-# Initialize OpenAI client
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
+USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"
+KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
 
-# Initializing Redis for caching (can be shared with core service if accessible)
 try:
-    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+    redis_client = redis.Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
     redis_client.ping()
-    logger.info("Redis server is connected and running successfully.")
-except redis.ConnectionError:
-    logger.warning("Redis not available, using in-memory cache")
+except Exception:
     redis_client = None
 
-# Initializing the Vector DB using ChromaDB
 chroma_client = None
 collection = None
 if USE_VECTOR_DB:
     try:
         chroma_client = chromadb.PersistentClient(path="./chroma_db")
-        try:
-            chroma_client.delete_collection("portfolio_knowledge")
-        except Exception:
-            pass
         collection = chroma_client.get_or_create_collection("portfolio_knowledge")
-        logger.info("ChromaDB vector database initialized")
     except Exception as e:
-        logger.error(f"Failed to initialize ChromaDB: {e}")
+        logger.error(f"ChromaDB error: {e}")
 
-# Removed local embedding initialization
-local_embedder = None
-
-
-# Pydantic models for chat
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=1000, description="User message to process")
-    session_id: Optional[str] = Field(None, description="Optional session ID for conversation history")
-    is_voice: bool = Field(False, description="Whether the request is from voice mode")
-
+    message: str = Field(..., min_length=1, max_length=1000)
+    session_id: Optional[str] = None
+    is_voice: bool = False
 
 class ChatResponse(BaseModel):
     response: str
     session_id: Optional[str] = None
     processing_time: float
-    audio: Optional[str] = None # Base64 encoded audio string
+    audio: Optional[str] = None
 
-
-# Load knowledge base from multiple files
 def load_all_knowledge(directory: str) -> str:
-    combined_content = []
+    combined = []
     data_path = Path(directory)
     if not data_path.is_absolute():
         data_path = Path(__file__).parent / directory
     
-    files = list(data_path.glob("*.txt")) + list(data_path.glob("*.md"))
-    logger.info(f"Scanning directory {data_path} for knowledge files. Found: {len(files)}")
-    
-    for file_path in files:
+    for file_path in list(data_path.glob("*.txt")) + list(data_path.glob("*.md")):
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read().strip()
-                combined_content.append(f"--- SOURCE: {file_path.name} ---\n{content}")
-                logger.info(f"Loaded {file_path.name}")
+            with open(file_path, 'r', encoding='utf-8') as f:
+                combined.append(f"--- SOURCE: {file_path.name} ---\n{f.read().strip()}")
         except Exception as e:
-            logger.error(f"Error loading {file_path}: {e}")
-    
-    return "\n\n".join(combined_content)
-
+            logger.error(f"Load error {file_path}: {e}")
+    return "\n\n".join(combined)
 
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
-    """Split text into manageable chunks with overlap"""
     sentences = re.split(r'(?<=[.!?])\s+', text)
-    chunks = []
-    current_chunk = []
-    current_length = 0
-
-    for i, sentence in enumerate(sentences):
-        sentence_length = len(sentence)
-
-        if current_length + sentence_length > chunk_size and current_chunk:
+    chunks, current_chunk, current_len = [], [], 0
+    for s in sentences:
+        if current_len + len(s) > chunk_size and current_chunk:
             chunks.append(' '.join(current_chunk))
-            # Keep some overlap for context
             current_chunk = current_chunk[-2:] if len(current_chunk) > 3 else []
-            current_length = sum(len(s) for s in current_chunk)
-
-        current_chunk.append(sentence)
-        current_length += sentence_length
-
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-
+            current_len = sum(len(x) for x in current_chunk)
+        current_chunk.append(s)
+        current_len += len(s)
+    if current_chunk: chunks.append(' '.join(current_chunk))
     return chunks
 
-
-# Global knowledge state
 KNOWLEDGE_BASE = ""
 knowledge_chunks = []
 
 @app.on_event("startup")
 async def startup_event():
     global KNOWLEDGE_BASE, knowledge_chunks
-    logger.info("Initializing knowledge base...")
     KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
     knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
-    logger.info(f"Total knowledge chunks from all files: {len(knowledge_chunks)}")
+    if USE_VECTOR_DB and collection and collection.count() == 0:
+        for i, chunk in enumerate(knowledge_chunks):
+            emb = await generate_embedding(chunk)
+            if emb:
+                collection.add(documents=[chunk], embeddings=[emb], ids=[f"chunk_{i}"])
 
-    # Initialize vector database with knowledge chunks
-    if USE_VECTOR_DB and collection:
-        try:
-            if collection.count() == 0:
-                logger.info(f"Generating OpenAI embeddings for {len(knowledge_chunks)} chunks...")
-                embeddings = []
-                valid_chunks = []
-                valid_ids = []
-                
-                for i, chunk in enumerate(knowledge_chunks):
-                    try:
-                        emb = await generate_embedding(chunk)
-                        if emb:
-                            embeddings.append(emb)
-                            valid_chunks.append(chunk)
-                            valid_ids.append(f"chunk_{i}")
-                    except Exception as e:
-                        logger.error(f"Failed to generate embedding for chunk {i}: {e}")
-
-                if embeddings:
-                    collection.add(
-                        documents=valid_chunks,
-                        embeddings=embeddings,
-                        ids=valid_ids
-                    )
-                    logger.info(f"Successfully added {len(embeddings)} chunks with OpenAI embeddings to vector database")
-                else:
-                    logger.error("No valid embeddings generated. Vector database remains empty.")
-            else:
-                logger.info(f"ChromaDB collection already contains {collection.count()} chunks. Skipping initial load.")
-        except Exception as e:
-            logger.error(f"Failed to initialize vector database with chunks: {e}")
-
-
-# Cache functions
-def get_cache(key: str) -> Optional[Any]:
-    if not redis_client:
-        return None
+async def generate_embedding(text: str) -> List[float]:
     try:
-        cached = redis_client.get(key)
-        return json.loads(cached) if cached else None
+        res = client.embeddings.create(input=text, model="text-embedding-3-small")
+        return res.data[0].embedding
+    except Exception as e:
+        logger.error(f"Embedding error: {e}")
+        return []
+
+async def find_relevant_context(query: str, top_k: int = 3) -> str:
+    try:
+        if USE_VECTOR_DB and collection:
+            emb = await generate_embedding(query)
+            res = collection.query(query_embeddings=[emb], n_results=top_k)
+            return "\n\n".join(res['documents'][0]) if res['documents'] else ""
+    except Exception as e:
+        logger.error(f"Context error: {e}")
+    return "\n\n".join(knowledge_chunks[:2])
+
+async def generate_audio(text: str) -> Optional[str]:
+    try:
+        res = client.audio.speech.create(model="tts-1", voice="alloy", input=text)
+        return base64.b64encode(res.content).decode('utf-8')
     except Exception:
         return None
 
-
-def set_cache(key: str, value: Any, ttl: int = CACHE_TTL):
-    if not redis_client:
-        return
-    try:
-        redis_client.setex(key, ttl, json.dumps(value))
-    except Exception as e:
-        logger.warning(f"Cache set failed: {e}")
-
-
-async def generate_embedding(text: str) -> List[float]:
-    # Use OpenAI Embeddings
-    try:
-        response = client.embeddings.create(
-            input=text,
-            model="text-embedding-3-small"
-        )
-        return response.data[0].embedding
-    except Exception as e:
-        logger.error(f"OpenAI embedding failed: {e}")
-        return []
-
-
-async def find_relevant_context(query: str, top_k: int = 3) -> str:
-    """Find relevant context using multiple strategies"""
-    cache_key = f"context:{hash(query)}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-
-    try:
-        if USE_VECTOR_DB and collection:
-            # Use vector database search
-            query_embedding = await generate_embedding(query)
-            results = collection.query(
-                query_embeddings=[query_embedding],
-                n_results=top_k
-            )
-            relevant_chunks = results['documents'][0] if results['documents'] else []
-        else:
-            # Use semantic search (fallback if vector DB is not used/failed)
-            query_embedding = await generate_embedding(query)
-            similarities = []
-
-            for chunk in knowledge_chunks:
-                # This approach would be very slow for many chunks without pre-computed embeddings
-                chunk_embedding = await generate_embedding(chunk)
-                similarity = np.dot(query_embedding, chunk_embedding) / (
-                        np.linalg.norm(query_embedding) * np.linalg.norm(chunk_embedding)
-                )
-                similarities.append((chunk, similarity))
-
-            similarities.sort(key=lambda x: x[1], reverse=True)
-            relevant_chunks = [chunk for chunk, score in similarities[:top_k] if score > 0.1]
-
-        if not relevant_chunks:
-            # If no relevant chunks found, provide a default from knowledge base
-            relevant_chunks = knowledge_chunks[:2]
-
-        result = "\n\n".join(relevant_chunks)
-        set_cache(cache_key, result)
-        return result
-
-    except Exception as e:
-        logger.error(f"Context search failed: {e}")
-        return "\n\n".join(knowledge_chunks[:2])
-
-
-async def generate_audio(text: str) -> Optional[str]:
-    """Generate high-quality audio using OpenAI TTS and return as base64"""
-    try:
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice="alloy", # Natural, clean American voice
-            input=text
-        )
-        # Convert to base64
-        return base64.b64encode(response.content).decode('utf-8')
-    except Exception as e:
-        logger.error(f"TTS Generation failed: {e}")
-        return None
-
-
 async def chat_with_openai(messages: List[dict]) -> str:
-    """Send chat request to OpenAI"""
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini", # Cost effective and fast
-            messages=messages,
-            temperature=0.3,
-            max_tokens=400 # Allow enough for 5 sentences
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"OpenAI chat failed: {e}")
-        return "Sorry, I'm experiencing technical difficulties connecting to my AI brain. Please try again later."
-
+        res = client.chat.completions.create(model="gpt-4o-mini", messages=messages, temperature=0.3, max_tokens=400)
+        return res.choices[0].message.content
+    except Exception:
+        return "Service unavailable."
 
 @app.get("/api/health")
 async def health_check():
-    return {
-        "status": "OK",
-        "message": "Chat AI Service healthy",
-        "version": "1.0.0",
-        "uptime": time.time() - app.start_time
-    }
-
+    return {"status": "OK", "uptime": time.time() - app.start_time}
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
-    start_time = time.time()
+    start = time.time()
     monitor.increment_chat_requests("received")
     try:
         context = await find_relevant_context(chat_request.message)
-
-        system_prompt = f"""You are an AI assistant for Abhijith Sai, a Mathematician and Data Scientist.
-
-        ABOUT ABHIJITH:
-        {context}
-
-        INSTRUCTIONS:
-        - Be professional, friendly, and concise.
-        - Use ONLY the information provided.
-        - Admit when you don't know something.
-        - STRICT LENGTH LIMIT: Use a maximum of 4-5 sentences.
-        - Focus on skills, projects, and experience.
-        """
-
-        if chat_request.is_voice:
-            system_prompt += "\n- VOICE MODE: Be extremely concise, keep it to 3 sentences if possible."
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": chat_request.message}
-        ]
-
-        text_response = await chat_with_openai(messages)
+        prompt = f"Assistant for Abhijith Sai.\nContext: {context}\nLimit: 4-5 sentences."
+        if chat_request.is_voice: prompt += "\nVoice: 3 sentences."
         
-        # Generate audio if voice requested
-        audio_b64 = None
-        if chat_request.is_voice:
-            audio_b64 = await generate_audio(text_response)
+        ans = await chat_with_openai([{"role": "system", "content": prompt}, {"role": "user", "content": chat_request.message}])
+        audio = await generate_audio(ans) if chat_request.is_voice else None
+        
+        proc_time = time.time() - start
+        monitor.increment_chat_requests("success")
+        return ChatResponse(response=ans, session_id=chat_request.session_id, processing_time=proc_time, audio=audio)
+    except Exception:
+        monitor.increment_chat_requests("error")
+        raise HTTPException(status_code=500, detail="Error")
 
-        processing_time = time.time() - start_time
-
-        monitor.increment_chat_requests(status="success")
-        monitor.set_response_time(processing_time)
-        return ChatResponse(
-            response=text_response,
-            session_id=chat_request.session_id,
-            processing_time=processing_time,
-            audio=audio_b64
-        )
-
-    except Exception as e:
-        processing_time = time.time() - start_time
-        monitor.increment_chat_requests(status="error")
-        logger.error(f"Chat error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@app.post("/api/knowledge/refresh")
-async def refresh_knowledge():
-    """Force reload of knowledge base and re-index vector DB"""
-    global KNOWLEDGE_BASE, knowledge_chunks
-    try:
-        KNOWLEDGE_BASE = load_all_knowledge(KNOWLEDGE_DIR)
-        knowledge_chunks = chunk_text(KNOWLEDGE_BASE)
-
-        if USE_VECTOR_DB and collection:
-            # Clear existing data and re-add
-            try:
-                # Get all IDs to delete
-                all_data = collection.get()
-                if all_data['ids']:
-                    collection.delete(ids=all_data['ids'])
-            except Exception as e:
-                logger.warning(f"Error clearing collection: {e}")
-
-            logger.info(f"Generating OpenAI embeddings for {len(knowledge_chunks)} chunks...")
-            embeddings = []
-            for chunk in knowledge_chunks:
-                emb = await generate_embedding(chunk)
-                embeddings.append(emb)
-
-            collection.add(
-                documents=knowledge_chunks,
-                embeddings=embeddings,
-                ids=[f"chunk_{i}" for i in range(len(knowledge_chunks))]
-            )
-            logger.info(f"Re-indexed {len(knowledge_chunks)} chunks into vector database")
-
-        return {"status": "success", "message": f"Reloaded {len(knowledge_chunks)} chunks"}
-    except Exception as e:
-        logger.error(f"Refresh failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Refresh failed: {str(e)}")
-
-
-# Error handlers
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=404,
-        content={"detail": "Endpoint not found"}
-    )
-
-
-@app.exception_handler(500)
-async def internal_error_handler(request: Request, exc: HTTPException):
-    logger.error(f"Internal error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
-    )
-
-
-# Store startup time
 app.start_time = time.time()
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8001,  # Chat service will run on a different internal port, e.g., 8001
-        log_level="info",
-        timeout_keep_alive=60
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8001)
