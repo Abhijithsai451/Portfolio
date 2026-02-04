@@ -1,46 +1,45 @@
-# Tasks V2: Transitioning from RAG to Agentic AI Assistant
+Tasks V2: Transitioning from RAG to Agentic AI Assistant
 
-This plan outlines the steps to upgrade your Portfolio AI from a static Retrieval-Augmented Generation (RAG) system to a dynamic Agentic system using OpenAI Tool Calling.
+This plan outlines the steps to upgrade your Portfolio AI from a static Retrieval-Augmented Generation (RAG) system to
+a dynamic Agentic system using OpenAI Tool Calling.
 
----
+Phase 1: Environment & Tool Setup
+1. Github Authentication:
+    - Generate a Personal Access Token (PAT) from GitHub (Settings > Developer Settings > Personal Access Tokens). - DONE
+    - Add GITHUB_TOKEN=your_token_here and GITHUB_USERNAME=your_username to your .env file. - DONE
+2. Dependencies:
+    - Add PyGithub or requests to chat_service/requirements.txt. - DONE
+    - Add beautifulsoup4 for basic scraping (if needed for LinkedIn). - DONE
 
-### Phase 1: Environment & Tool Setup
-1. [ ] **Github Authentication**:
-    - Generate a Personal Access Token (PAT) from GitHub (Settings > Developer Settings > Personal Access Tokens).
-    - Add `GITHUB_TOKEN=your_token_here` and `GITHUB_USERNAME=your_username` to your `.env` file.
-2. [ ] **Dependencies**:
-    - Add `PyGithub` or `requests` to `chat_service/requirements.txt`.
-    - Add `beautifulsoup4` for basic scraping (if needed for LinkedIn).
-
-### Phase 2: Building individual Tools
-3. [ ] **GitHub Search Tool (`tools/github_tool.py`)**:
-    - Implement a function `query_github(query_type: str, repo_name: Optional[str])`.
-    - Support types: `recent_commits`, `open_issues`, `repo_overview`.
-4. [ ] **LinkedIn Scraper Tool (`tools/linkedin_tool.py`)**:
-    - Implement `get_latest_posts(profile_url: str)`.
+Phase 2: Building individual Tools
+3. GitHub Search Tool (tools/github_tool.py):
+    - Implement a function query_github(query_type: str, repo_name: Optional[str]).
+    - Support types: recent_commits, open_issues, repo_overview.
+4. LinkedIn Scraper Tool (tools/linkedin_tool.py):
+    - Implement get_latest_posts(profile_url: str).
     - Note: LinkedIn is tough to scrape. Consider using a headless browser (Playwright) or a dedicated API if simple scraping fails.
-5. [ ] **README Analysis Tool (`tools/analysis_tool.py`)**:
-    - Implement `analyze_project_vibe(repo_name: str)`.
+5. README Analysis Tool (tools/analysis_tool.py):
+    - Implement analyze_project_vibe(repo_name: str).
     - This tool should fetch the README content and return it. The LLM will then interpret the "vibe" based on a specific prompt instruction.
 
-### Phase 3: Agent Integration (The "Brain" Upgrade)
-6. [ ] **Refactor `chat_service/main.py`**:
+Phase 3: Agent Integration (The "Brain" Upgrade)
+6. Refactor chat_service/main.py:
     - Define the JSON schemas for each tool (OpenAI Tool format).
-    - Update the `chat_endpoint` to:
+    - Update the chat_endpoint to:
         1. Send the user message + tool definitions to OpenAI.
-        2. Check if the model wants to call a tool (`message.tool_calls`).
+        2. Check if the model wants to call a tool (message.tool_calls).
         3. Execute the corresponding Python function.
         4. Send the tool results back to OpenAI for the final natural language response.
-7. [ ] **System Prompt Update**:
+7. System Prompt Update:
     - Instruction: "You are an autonomous agent. If you need info not in your base knowledge, use your tools. If asked about development style, use the Analysis Tool on the main repo."
 
-### Phase 4: Refinement & Testing
-8. [ ] **Hybrid Mode**:
+Phase 4: Refinement & Testing
+8. Hybrid Mode:
     - Keep the RAG (ChromaDB) as a "Knowledge Base Tool" for general CV questions, but use the new tools for "Live" data.
-9. [ ] **UI Feedback**:
+9. UI Feedback:
     - (Optional) Update the frontend to show a status like "Searching GitHub..." or "Analyzing vibe..." when a tool is being used.
 
-### Why this is better:
-- **Accuracy**: No more "stale" info from a `.txt` file.
-- **Interactivity**: The AI can actually "look up" things it doesn't know.
-- **Wow Factor**: Users love seeing an AI browse their code or sentiment in real-time.
+Why this is better:
+- Accuracy: No more "stale" info from a .txt file.
+- Interactivity: The AI can actually "look up" things it doesn't know.
+- Wow Factor: Users love seeing an AI browse their code or sentiment in real-time.
