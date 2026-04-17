@@ -11,10 +11,9 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 github = Github(GITHUB_TOKEN)
 
 
-def query_github(query_type: str, repository: str) -> str:
+def query_github(repository: str) -> str:
     """
     Fetches the real time data from Github repository
-    query_type : The type of information needed from the github repository (commits, messages,project overview)
     repository : The name of the repository
     """
     repo = github.get_repo(repository)
@@ -22,7 +21,6 @@ def query_github(query_type: str, repository: str) -> str:
     messages = []
     for c in commits:
         messages.append(c.commit.message)
-    read_me = fetch_readme(repository)
     return messages
 
 
@@ -35,4 +33,6 @@ def fetch_readme(repo_name: str):
 
 
 if __name__ == "__main__":
-    print(query_github("Abhijithsai451/realtime_threat_detection_multi_agent"))
+    # Example usage:
+    # print(query_github("Abhijithsai451/realtime_threat_detection_multi_agent"))
+    pass

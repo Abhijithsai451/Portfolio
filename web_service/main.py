@@ -2,11 +2,10 @@ import os
 import time
 import logging
 import aiohttp
-import redis
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,10 +43,12 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 CHAT_SERVICE_URL = os.getenv("CHAT_SERVICE_URL", "http://localhost:8001")
 
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000)
     session_id: Optional[str] = None
     is_voice: bool = False
+
 
 class ChatResponse(BaseModel):
     response: str
@@ -55,19 +56,23 @@ class ChatResponse(BaseModel):
     processing_time: float
     audio: Optional[str] = None
 
+
 class ContactRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: str = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
     subject: str = Field(..., min_length=1, max_length=200)
     message: str = Field(..., min_length=1, max_length=2000)
 
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "OK", "uptime": time.time() - app.start_time}
 
+
 @app.get("/api/stats")
 async def get_stats():
     return monitor.get_stats()
+
 
 @app.post("/api/chat", response_model=ChatResponse)
 @limiter.limit("10/minute")
@@ -77,9 +82,9 @@ async def chat_endpoint_proxy(request: Request, chat_request: ChatRequest):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{CHAT_SERVICE_URL}/api/chat",
-                json=chat_request.model_dump(exclude_none=True),
-                timeout=90
+                    f"{CHAT_SERVICE_URL}/api/chat",
+                    json=chat_request.model_dump(exclude_none=True),
+                    timeout=90
             ) as response:
                 if response.status != 200:
                     logger.error(f"Chat service error: {response.status}")
@@ -99,51 +104,61 @@ async def chat_endpoint_proxy(request: Request, chat_request: ChatRequest):
         logger.error(f"Chat proxy error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
 @app.post("/api/contact")
 @limiter.limit("5/minute")
 async def contact_endpoint(request: Request, contact_request: ContactRequest):
     logger.info(f"Received contact request from {contact_request.email}")
-    
+
     success = send_contact_email(
         name=contact_request.name,
         email=contact_request.email,
         subject=contact_request.subject,
         message=contact_request.message
     )
-    
+
     if success:
         return {"status": "success", "message": "Email sent successfully"}
     else:
         # In a real scenario, you might want to log this or try a backup method
         raise HTTPException(status_code=500, detail="Failed to send email")
 
+
 # Static Files
 frontend_path = Path(__file__).parent.parent / "frontend"
 app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
 
 @app.get("/")
 async def read_index():
     return FileResponse(frontend_path / "index.html")
 
+
 @app.get("/{page_name}.html")
 async def read_html(page_name: str):
     file_path = frontend_path / f"{page_name}.html"
-    return FileResponse(file_path) if file_path.exists() else JSONResponse(status_code=404, content={"detail": "Not found"})
+    return FileResponse(file_path) if file_path.exists() else JSONResponse(status_code=404,
+                                                                           content={"detail": "Not found"})
+
 
 @app.get("/css/{file_path:path}")
 async def serve_css(file_path: str):
     return FileResponse(frontend_path / "css" / file_path)
 
+
 @app.get("/js/{file_path:path}")
 async def serve_js(file_path: str):
     return FileResponse(frontend_path / "js" / file_path)
+
 
 @app.get("/images/{file_path:path}")
 async def serve_images(file_path: str):
     return FileResponse(frontend_path / "images" / file_path)
 
+
 app.start_time = time.time()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

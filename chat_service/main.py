@@ -1,18 +1,14 @@
 import os
 import time
 import logging
-import json
 import re
 import base64
 from pathlib import Path
-from typing import List, Optional, Any
-import numpy as np
+from typing import List, Optional
 import openai
-import redis
 import chromadb
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
@@ -39,12 +35,6 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 USE_VECTOR_DB = os.getenv("USE_VECTOR_DB", "true").lower() == "true"
 KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "data")
 
-try:
-    redis_client = redis.Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
-    redis_client.ping()
-except Exception:
-    redis_client = None
-
 chroma_client = None
 collection = None
 if USE_VECTOR_DB:
@@ -54,10 +44,12 @@ if USE_VECTOR_DB:
     except Exception as e:
         logger.error(f"ChromaDB error: {e}")
 
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000)
     session_id: Optional[str] = None
     is_voice: bool = False
+
 
 class ChatResponse(BaseModel):
     response: str
@@ -65,12 +57,13 @@ class ChatResponse(BaseModel):
     processing_time: float
     audio: Optional[str] = None
 
+
 def load_all_knowledge(directory: str) -> str:
     combined = []
     data_path = Path(directory)
     if not data_path.is_absolute():
         data_path = Path(__file__).parent / directory
-    
+
     for file_path in list(data_path.glob("*.txt")) + list(data_path.glob("*.md")):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -78,6 +71,7 @@ def load_all_knowledge(directory: str) -> str:
         except Exception as e:
             logger.error(f"Load error {file_path}: {e}")
     return "\n\n".join(combined)
+
 
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -92,8 +86,10 @@ def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     if current_chunk: chunks.append(' '.join(current_chunk))
     return chunks
 
+
 KNOWLEDGE_BASE = ""
 knowledge_chunks = []
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -106,6 +102,7 @@ async def startup_event():
             if emb:
                 collection.add(documents=[chunk], embeddings=[emb], ids=[f"chunk_{i}"])
 
+
 async def generate_embedding(text: str) -> List[float]:
     try:
         res = client.embeddings.create(input=text, model="text-embedding-3-small")
@@ -113,6 +110,7 @@ async def generate_embedding(text: str) -> List[float]:
     except Exception as e:
         logger.error(f"Embedding error: {e}")
         return []
+
 
 async def find_relevant_context(query: str, top_k: int = 3) -> str:
     try:
@@ -124,12 +122,14 @@ async def find_relevant_context(query: str, top_k: int = 3) -> str:
         logger.error(f"Context error: {e}")
     return "\n\n".join(knowledge_chunks[:2])
 
+
 async def generate_audio(text: str) -> Optional[str]:
     try:
         res = client.audio.speech.create(model="tts-1", voice="alloy", input=text)
         return base64.b64encode(res.content).decode('utf-8')
     except Exception:
         return None
+
 
 async def chat_with_openai(messages: List[dict]) -> str:
     try:
@@ -138,9 +138,11 @@ async def chat_with_openai(messages: List[dict]) -> str:
     except Exception:
         return "Service unavailable."
 
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "OK", "uptime": time.time() - app.start_time}
+
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
@@ -150,10 +152,11 @@ async def chat_endpoint(chat_request: ChatRequest):
         context = await find_relevant_context(chat_request.message)
         prompt = f"Assistant for Abhijith Sai.\nContext: {context}\nLimit: 4-5 sentences."
         if chat_request.is_voice: prompt += "\nVoice: 3 sentences."
-        
-        ans = await chat_with_openai([{"role": "system", "content": prompt}, {"role": "user", "content": chat_request.message}])
+
+        ans = await chat_with_openai(
+            [{"role": "system", "content": prompt}, {"role": "user", "content": chat_request.message}])
         audio = await generate_audio(ans) if chat_request.is_voice else None
-        
+
         proc_time = time.time() - start
         monitor.increment_chat_requests("success")
         return ChatResponse(response=ans, session_id=chat_request.session_id, processing_time=proc_time, audio=audio)
@@ -161,8 +164,10 @@ async def chat_endpoint(chat_request: ChatRequest):
         monitor.increment_chat_requests("error")
         raise HTTPException(status_code=500, detail="Error")
 
+
 app.start_time = time.time()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)
