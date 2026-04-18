@@ -3,6 +3,7 @@ import time
 import logging
 import re
 import base64
+import uvicorn
 from pathlib import Path
 from typing import List, Optional
 import openai
@@ -133,7 +134,7 @@ async def generate_audio(text: str) -> Optional[str]:
 
 async def chat_with_openai(messages: List[dict]) -> str:
     try:
-        res = client.chat.completions.create(model="gpt-4o-mini", messages=messages, temperature=0.3, max_tokens=400)
+        res = client.chat.completions.create(model="gpt-4o-mini", messages=messages, temperature=0.8, max_tokens=400)
         return res.choices[0].message.content
     except Exception:
         return "Service unavailable."
@@ -168,6 +169,4 @@ async def chat_endpoint(chat_request: ChatRequest):
 app.start_time = time.time()
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8001)
