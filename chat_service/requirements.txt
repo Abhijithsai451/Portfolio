@@ -11,3 +11,5 @@ openai>=1.12.0
 aiohttp>=3.9.0
 PyGithub
 beautifulsoup4
+langgraph
+langchain

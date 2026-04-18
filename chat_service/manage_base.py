@@ -1,6 +1,6 @@
 import argparse
 
-from chat_service.main import load_all_knowledge, chunk_text
+from chat_service.main_bkp import load_all_knowledge, chunk_text
 
 
 def show_stats():
