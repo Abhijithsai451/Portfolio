@@ -44,6 +44,7 @@ class ChatResponse(BaseModel):
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
     start = time.time()
+    logger.info(f"Incoming Chat Request: session_id={chat_request.session_id}, is_voice={chat_request.is_voice}")
     monitor.increment_chat_requests("received")
     
     try:
@@ -59,10 +60,13 @@ async def chat_endpoint(chat_request: ChatRequest):
         }
         
         # Invoke Graph
+        logger.info("Invoking Portfolio Agent Graph...")
         final_state = await portfolio_graph.ainvoke(initial_state)
+        logger.info("Graph invocation complete.")
         
         proc_time = time.time() - start
         monitor.increment_chat_requests("success")
+        logger.info(f"Request processed successfully in {proc_time:.2f}s")
         
         return ChatResponse(
             response=final_state.get("final_response", "I'm sorry, I couldn't process that."),
