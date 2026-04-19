@@ -13,3 +13,4 @@ PyGithub
 beautifulsoup4
 langgraph
 langchain
+langchain-openai

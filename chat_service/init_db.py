@@ -1,18 +1,19 @@
-import os
-import asyncio
-from pathlib import Path
-from chat_service.tools.doc_tool import PortfolioDocTool
+import logging
+
+# Initialize Logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 async def init_db():
     tool = PortfolioDocTool()
     data_dir = Path("data")
     
-    print(f"Indexing documents from {data_dir}...")
+    logger.info(f"Indexing documents from {data_dir}...")
     
     files = list(data_dir.glob("*.txt")) + list(data_dir.glob("*.md"))
     
     for file_path in files:
-        print(f"Processing {file_path.name}...")
+        logger.info(f"Processing {file_path.name}...")
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
             
@@ -27,7 +28,7 @@ async def init_db():
                 ids=[f"{file_path.name}_{i}"]
             )
             
-    print("Indexing complete!")
+    logger.info("Indexing complete!")
 
 if __name__ == "__main__":
     asyncio.run(init_db())
